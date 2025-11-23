@@ -255,7 +255,7 @@ local ToolsESP_Toggled = true
 local MAX_TOOLS_DISPLAY = 5  -- Máximo visible
 
 local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
-local CurrentToolsTextSize = 16
+local CurrentToolsTextSize = 5
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -398,7 +398,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- === TOGGLE + SLIDER ===
-sector15:AddToggle("Tools ESP (Muy Arriba)", false, function(state)
+sector15:AddToggle("ESP Guns", false, function(state)
     ToolsESP_Enabled = state
     if not state then
         for _, v in ToolsESP_Objects do if v and v.Parent then v:Destroy() end end
@@ -406,7 +406,7 @@ sector15:AddToggle("Tools ESP (Muy Arriba)", false, function(state)
     end
 end)
 
-sector15:AddSlider("Tamaño Tools ESP", 10, 30, 16, 1, function(v)
+sector15:AddSlider("Size tools:", 5, 5, 20, 1, function(v)
     CurrentToolsTextSize = v
 end)
 
