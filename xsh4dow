@@ -1,5 +1,5 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("❗ LTS X CHEATS | South Bronx ❗", Vector2.new(400, 400), Enum.KeyCode.T)
+local win = lib:CreateWindow("V2.5 | LTS X South Bronx ❗      Press [F1]", Vector2.new(350, 400), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("Combat")
 local tab2 = win:CreateTab("Visual")
 local sector1 = tab1:CreateSector("Camlock Category","left")
@@ -8,8 +8,8 @@ local sector15 = tab2:CreateSector("ESP Category","left")
 
 getgenv().OldAimPart = "HumanoidRootPart"
 getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
-getgenv().AimlockKey = "v"
-getgenv().AimRadius = 30 -- How far away from someones character you want to lock on at
+getgenv().AimlockKey = "b"
+getgenv().AimRadius = 20 -- How far away from someones character you want to lock on at
 getgenv().ThirdPerson = true
 getgenv().FirstPerson = true
 getgenv().TeamCheck = false -- Check if Target is on your Team (True means it wont lock onto your teamates, false is vice versa) (Set it to false if there are no teams)
@@ -17,155 +17,174 @@ getgenv().PredictMovement = true -- Predicts if they are moving in fast velocity
 getgenv().PredictionVelocity = 14
 getgenv().CheckIfJumped = false
 getgenv().AutoPrediction = false
-getgenv().Smoothness = 0.27 -- ← NUEVA VARIABLE (0 = sin smooth, cuanto más alto más suave)
+getgenv().Smoothness = 0 -- ← NUEVA VARIABLE (0 = sin smooth, cuanto más alto más suave)
+getgenv().AliveCheck = false  -- ← Asegura que empiece desactivado aunque el toggle falle
 
 local L_13_, L_14_, L_15_, L_16_ = game:GetService"Players", game:GetService"UserInputService", game:GetService"RunService", game:GetService"StarterGui";
 local L_17_, L_18_, L_19_, L_20_, L_21_, L_22_, L_23_ = L_13_.LocalPlayer, L_13_.LocalPlayer:GetMouse(), workspace.CurrentCamera, CFrame.new, Ray.new, Vector3.new, Vector2.new;
 local L_24_, L_25_, L_26_ = false, false, false;
 local L_27_;
 local L_28_;
+
 getgenv().WorldToViewportPoint = function(L_91_arg0)
-	return L_19_:WorldToViewportPoint(L_91_arg0)
+    return L_19_:WorldToViewportPoint(L_91_arg0)
 end
 getgenv().WorldToScreenPoint = function(L_92_arg0)
-	return L_19_:WorldToScreenPoint(L_19_, L_92_arg0)
+    return L_19_:WorldToScreenPoint(L_19_, L_92_arg0)
 end
 getgenv().GetObscuringObjects = function(L_93_arg0)
-	if L_93_arg0 and L_93_arg0:FindFirstChild(getgenv().AimPart) and L_17_ and L_17_.Character:FindFirstChild("Head") then
-		local L_94_ = workspace:FindPartOnRay(L_21_(
+    if L_93_arg0 and L_93_arg0:FindFirstChild(getgenv().AimPart) and L_17_ and L_17_.Character:FindFirstChild("Head") then
+        local L_94_ = workspace:FindPartOnRay(L_21_(
                 L_93_arg0[getgenv().AimPart].Position, L_17_.Character.Head.Position)
-            )
-		if L_94_ then
-			return L_94_:IsDescendantOf(L_93_arg0)
-		end
-	end
+        )
+        if L_94_ then
+            return L_94_:IsDescendantOf(L_93_arg0)
+        end
+    end
 end
+
 getgenv().GetNearestTarget = function()
-    
-	local L_95_ = {}
-	local L_96_  = {}
-	local L_97_ = {}
-	for L_99_forvar0, L_100_forvar1 in pairs(L_13_:GetPlayers()) do
-		if L_100_forvar1 ~= L_17_ then
-			table.insert(L_95_, L_100_forvar1)
-		end
-	end
-	for L_101_forvar0, L_102_forvar1 in pairs(L_95_) do
-		if L_102_forvar1.Character ~= nil then
-			local L_103_ = L_102_forvar1.Character:FindFirstChild("Head")
-			if getgenv().TeamCheck == true and L_102_forvar1.Team ~= L_17_.Team then
-				local L_104_ = (L_102_forvar1.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
-				local L_105_ = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (L_18_.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * L_104_)
-				local L_106_, L_107_ = game.Workspace:FindPartOnRay(L_105_, game.Workspace)
-				local L_108_ = math.floor((L_107_ - L_103_.Position).magnitude)
-				L_96_[L_102_forvar1.Name .. L_101_forvar0] = {}
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].dist = L_104_
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].plr = L_102_forvar1
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].diff = L_108_
-				table.insert(L_97_, L_108_)
-			elseif getgenv().TeamCheck == false and L_102_forvar1.Team == L_17_.Team then
-				local L_109_ = (L_102_forvar1.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
-				local L_110_ = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (L_18_.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * L_109_)
-				local L_111_, L_112_ = game.Workspace:FindPartOnRay(L_110_, game.Workspace)
-				local L_113_ = math.floor((L_112_ - L_103_.Position).magnitude)
-				L_96_[L_102_forvar1.Name .. L_101_forvar0] = {}
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].dist = L_109_
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].plr = L_102_forvar1
-				L_96_[L_102_forvar1.Name .. L_101_forvar0].diff = L_113_
-				table.insert(L_97_, L_113_)
-			end
-		end
-	end
-	if unpack(L_97_) == nil then
-		return nil
-	end
-	local L_98_ = math.floor(math.min(unpack(L_97_)))
-	if L_98_ > getgenv().AimRadius then
-		return nil
-	end
-	for L_114_forvar0, L_115_forvar1 in pairs(L_96_) do
-		if L_115_forvar1.diff == L_98_ then
-			return L_115_forvar1.plr
-		end
-	end
-	return nil
+    local L_95_ = {}
+    local L_96_ = {}
+    local L_97_ = {}
+    for L_99_forvar0, L_100_forvar1 in pairs(L_13_:GetPlayers()) do
+        if L_100_forvar1 ~= L_17_ then
+            table.insert(L_95_, L_100_forvar1)
+        end
+    end
+    for L_101_forvar0, L_102_forvar1 in pairs(L_95_) do
+        if L_102_forvar1.Character ~= nil then
+            local L_103_ = L_102_forvar1.Character:FindFirstChild("Head")
+            if getgenv().TeamCheck == true and L_102_forvar1.Team ~= L_17_.Team then
+                local L_104_ = (L_102_forvar1.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                local L_105_ = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (L_18_.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * L_104_)
+                local L_106_, L_107_ = game.Workspace:FindPartOnRay(L_105_, game.Workspace)
+                local L_108_ = math.floor((L_107_ - L_103_.Position).magnitude)
+                L_96_[L_102_forvar1.Name .. L_101_forvar0] = {}
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].dist = L_104_
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].plr = L_102_forvar1
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].diff = L_108_
+                table.insert(L_97_, L_108_)
+            elseif getgenv().TeamCheck == false and L_102_forvar1.Team == L_17_.Team then
+                local L_109_ = (L_102_forvar1.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                local L_110_ = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (L_18_.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * L_109_)
+                local L_111_, L_112_ = game.Workspace:FindPartOnRay(L_110_, game.Workspace)
+                local L_113_ = math.floor((L_112_ - L_103_.Position).magnitude)
+                L_96_[L_102_forvar1.Name .. L_101_forvar0] = {}
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].dist = L_109_
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].plr = L_102_forvar1
+                L_96_[L_102_forvar1.Name .. L_101_forvar0].diff = L_113_
+                table.insert(L_97_, L_113_)
+            end
+        end
+    end
+    if unpack(L_97_) == nil then
+        return nil
+    end
+    local L_98_ = math.floor(math.min(unpack(L_97_)))
+    if L_98_ > getgenv().AimRadius then
+        return nil
+    end
+    for L_114_forvar0, L_115_forvar1 in pairs(L_96_) do
+        if L_115_forvar1.diff == L_98_ then
+            return L_115_forvar1.plr
+        end
+    end
+    return nil
 end
+
 L_18_.KeyDown:Connect(function(L_116_arg0)
-	if not (L_14_:GetFocusedTextBox()) then
-		if L_116_arg0 == AimlockKey and L_27_ == nil then
-			pcall(function()
-				if L_25_ ~= true then
-					L_25_ = true
-				end
-				local L_117_;
-				L_117_ = GetNearestTarget()
-				if L_117_ ~= nil then
-					L_27_ = L_117_
-				end
-			end)
-		elseif L_116_arg0 == AimlockKey and L_27_ ~= nil then
-			if L_27_ ~= nil then
-				L_27_ = nil
-			end
-			if L_25_ ~= false then
-				L_25_ = false
-			end
-		end
-	end
+    if not (L_14_:GetFocusedTextBox()) then
+        if L_116_arg0 == AimlockKey and L_27_ == nil then
+            pcall(function()
+                if L_25_ ~= true then
+                    L_25_ = true
+                end
+                local L_117_;
+                L_117_ = GetNearestTarget()
+                if L_117_ ~= nil then
+                    L_27_ = L_117_
+                end
+            end)
+        elseif L_116_arg0 == AimlockKey and L_27_ ~= nil then
+            if L_27_ ~= nil then
+                L_27_ = nil
+            end
+            if L_25_ ~= false then
+                L_25_ = false
+            end
+        end
+    end
 end)
+
 L_15_.RenderStepped:Connect(function()
-	if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then
-		if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude > 1 or (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude <= 1 then
-			L_26_ = true
-		else
-			L_26_ = false
-		end
-	elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then
-		if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude > 1 then
-			L_26_ = true
-		else
-			L_26_ = false
-		end
-	elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then
-		if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude <= 1 then
-			L_26_ = true
-		else
-			L_26_ = false
-		end
-	end
-	if L_24_ == true and L_25_ == true then
-		if L_27_ and L_27_.Character and L_27_.Character:FindFirstChild(getgenv().AimPart) then
-			if getgenv().FirstPerson == true or getgenv().ThirdPerson == true then
-				if L_26_ == true then
-					local targetPos = L_27_.Character[getgenv().AimPart].Position
-					if getgenv().PredictMovement == true then
-						targetPos = targetPos + L_27_.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity
-					end
-					
-					if getgenv().Smoothness > 0 then
-						-- AIM SUAVE (LERP)
-						L_19_.CFrame = L_19_.CFrame:Lerp(CFrame.new(L_19_.CFrame.p, targetPos), getgenv().Smoothness)
-					else
-						-- SIN SUAVIDAD (INSTANTÁNEO)
-						L_19_.CFrame = CFrame.new(L_19_.CFrame.p, targetPos)
-					end
-				end
-			end
-		end
-	end
-	if CheckIfJumped == true then
-		if L_27_.Character.Humanoid.FloorMaterial == Enum.Material.Air then
-			getgenv().AimPart = "RightFoot"
-		else
-			getgenv().AimPart = getgenv().OldAimPart
-		end
-	end
+    if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then
+        if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude > 1 or (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude <= 1 then
+            L_26_ = true
+        else
+            L_26_ = false
+        end
+    elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then
+        if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude > 1 then
+            L_26_ = true
+        else
+            L_26_ = false
+        end
+    elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then
+        if (L_19_.Focus.p - L_19_.CoordinateFrame.p).Magnitude <= 1 then
+            L_26_ = true
+        else
+            L_26_ = false
+        end
+    end
+
+    if L_24_ == true and L_25_ == true then
+
+        -- === AÑADIDO: Alive Check (suelta el target si está muerto) ===
+        if getgenv().AliveCheck and L_27_ and L_27_.Character then
+            local humanoid = L_27_.Character:FindFirstChild("Humanoid")
+            if not humanoid or humanoid.Health <= 0 then
+                L_27_ = nil  -- suelta automáticamente si está muerto
+            end
+        end
+        -- === FIN Alive Check ===
+
+        if L_27_ and L_27_.Character and L_27_.Character:FindFirstChild(getgenv().AimPart) then
+            if getgenv().FirstPerson == true or getgenv().ThirdPerson == true then
+                if L_26_ == true then
+                    local targetPos = L_27_.Character[getgenv().AimPart].Position
+                    if getgenv().PredictMovement == true then
+                        targetPos = targetPos + L_27_.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity
+                    end
+                    
+                    if getgenv().Smoothness > 0 then
+                        L_19_.CFrame = L_19_.CFrame:Lerp(CFrame.new(L_19_.CFrame.p, targetPos), getgenv().Smoothness)
+                    else
+                        L_19_.CFrame = CFrame.new(L_19_.CFrame.p, targetPos)
+                    end
+                end
+            end
+        end
+    end
+
+    if CheckIfJumped == true then
+        if L_27_ and L_27_.Character and L_27_.Character:FindFirstChild("Humanoid") then
+            if L_27_.Character.Humanoid.FloorMaterial == Enum.Material.Air then
+                getgenv().AimPart = "RightFoot"
+            else
+                getgenv().AimPart = getgenv().OldAimPart
+            end
+        end
+    end
 end)
-sector1:AddToggle("Aimlock",false,function(L_122_arg0)
+sector1:AddToggle("Aimlock - (Key B)",false,function(L_122_arg0)
 L_24_ = L_122_arg0
 end)
 sector1:AddToggle("Team Check",false,function(L_126_arg0)
 getgenv().TeamCheck = L_126_arg0
+end)
+sector1:AddToggle("Alive Check", false, function(state)
+    getgenv().AliveCheck = state
 end)
 sector1:AddToggle("Airshot Function",false,function(L_131_arg0)
 CheckIfJumped =  L_131_arg0
@@ -179,8 +198,11 @@ end)
 sector1:AddTextbox("Aimlock Prediction",false,function(L_124_arg0)
 PredictionVelocity = L_124_arg0
 end)
-sector1:AddTextbox("Aimlock Radius Func",false,function(L_133_arg0)
-getgenv().AimRadius = L_133_arg0
+sector1:AddTextbox("Aimlock Radius", "", function(value)
+    local num = tonumber(value)
+    if num and num >= 0 then
+        getgenv().AimRadius = num
+    end
 end)
 sector1:AddTextbox("Aim Smoothness", "", function(value)
     local num = tonumber(value)
@@ -226,93 +248,290 @@ sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
 	circle.Radius = L_130_arg0
 end)
 
--- ==================== MINECRAFT NAME ESP CON SECTOR15 ====================
+
+-- ==================== ESP TOOLS ULTRA ÉPICO - POTATO CHIPS + MÁX... + BRAINROT BINARY ====================
+local ToolsESP_Enabled = false
+local ToolsESP_Toggled = true
+local MAX_TOOLS_DISPLAY = 5  -- Máximo visible
+
+local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
+local CurrentToolsTextSize = 16
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local ToolsESP_Objects = {}
+
+-- === CATEGORÍAS (SOLO ESTOS TOOLS SE VERÁN) ===
+local ToolsCategories = {
+    Default = {
+        color = Color3.fromRGB(200, 200, 200),
+        tools = {"Potato Chips"}  -- ← SOLO ESTE TOOL EN DEFAULT
+    },
+    Standard = {color = Color3.fromRGB(255, 255, 255), tools = {"Glock 23","Glock 43","Ruger P345","VP9","Glock 40 Gen 4","P226 Silenced","Glock 17",".357","Glock26","Taurus G2C","S&W M29","G19X","FNX 45","Staccato P","Staccato P Extended","TP9 Elite","FN 502 Tac","G17 Dual Laser","Glock 20","Hi-Point","Ruger LCP","Springfield XD","Revolver","Beretta","P320","M1911","Glock 34","G21S Vect Mag","G21 Vect Mag","Machete"}},
+    Extended = {color = Color3.fromRGB(255, 255, 0), tools = {"Glock 43 Extended","Glock 23 Extended","Ruger P345 Extended","VP9 Extended","G22EXT","Ruger Extended","Taurus TX22 EXT","Makarov Extended","G40 Extended","Silenced P226 Extended","P226 Extended","Barretta Extended","Glock 20 Ext","Glock Beam","M&P Ext","p320E","Springfield XD Mod","GlockS","Five-Seven","P80 Extended","H&K USP EXT","H&K USP","Glock 34 Extended","G40 Extended","G19X Ext","FN57"}},
+    Heavy = {color = Color3.fromRGB(0, 150, 255), tools = {"MPX","Honey Badger Pistol","DDM4 V7 Pistol","AR Pistol","Draco","Tec-9","MCX","PLR-16","ARP9"}},
+    Drum = {color = Color3.fromRGB(255, 150, 0), tools = {"ARP9 Clear Drum", "Black Micro Drac", "G26 Clear Drum", "MPX Drum", "G21S Drum", "DDM4 V7 Drum" , "Five-Seven Drum","ORK-16 Drum","P80 Drum","G22 Drum","Taurus Drum","AR Pistol Drum","SpringfieldXD Drum","MCX Drum","G19X Drum","Tec-9 Dru","FN57 Drum","Glock 23 Drum","VP9 Drum","GlockS Drum","Draco Drum","Hit-Point Drum","Glock 20 Drum"}},
+    Binary = {
+        color = Color3.fromRGB(255, 0, 0),
+        flashColor = Color3.fromRGB(0, 0, 0),
+        brainrot = true,
+        tools = {"Binary Black Draco", "Binary G17 Gen 5", "Binary 300 Blackout ARP", "Binary 6in AR9"}  -- ← AÑADE TUS BINARY AQUÍ
+    },
+    TiersHeavy = {color = Color3.fromRGB(0, 255, 255), tools = {"Suppressed MCX","Suppressed ARP","Whiteout ARP9 W/Purple Beam","Tan 300 Blackkout MCX",".308 AR-10","Honey Badger","M&P-15 Sport II","300 Blackout","Micro Draco","Micro Arp","Ak Draco"}},
+    TiersDrum = {color = Color3.fromRGB(180, 0, 255), tools = {".308 AR-10 Drum","Honey Badger Drum","M&P-15 Sport II Drum","Micro Draco Drum","300 Blackout Drum","AK Draco Drum","Micro ARP Drum"}}
+}
+
+local function GetToolCategory(toolName)
+    for cat, data in pairs(ToolsCategories) do
+        for _, name in data.tools do
+            if toolName:find(name) or name:find(toolName) then
+                return cat, data
+            end
+        end
+    end
+    return "Hidden", nil
+end
+
+local function UpdateToolsESP(plr)
+    if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+    local head = plr.Character.Head
+
+    local bill = ToolsESP_Objects[plr]
+    if not bill or not bill.Parent then
+        bill = Instance.new("BillboardGui")
+        bill.Name = "ToolsESP_Epic"
+        bill.Adornee = head
+        bill.Size = UDim2.new(0, 500, 0, 70)
+        bill.StudsOffset = Vector3.new(0, 7.5, 0)
+        bill.AlwaysOnTop = true
+        bill.Parent = head
+
+        local text = Instance.new("TextLabel")
+        text.Size = UDim2.new(1, 0, 1, 0)
+        text.BackgroundTransparency = 1
+        text.Text = ""
+        text.FontFace = MinecraftFont
+        text.TextStrokeTransparency = 0
+        text.TextStrokeColor3 = Color3.new(0, 0, 0)
+        text.TextSize = CurrentToolsTextSize
+        text.TextScaled = false
+        text.TextXAlignment = Enum.TextXAlignment.Center
+        text.TextYAlignment = Enum.TextYAlignment.Center
+        text.Parent = bill
+
+        ToolsESP_Objects[plr] = bill
+    end
+
+    local label = bill.TextLabel
+
+    if not (ToolsESP_Enabled and ToolsESP_Toggled) then
+        bill.Enabled = false
+        return
+    end
+
+    label.TextSize = CurrentToolsTextSize
+
+    local validTools = {}
+    for _, tool in pairs(plr.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            local cat = GetToolCategory(tool.Name)
+            if cat ~= "Hidden" then
+                table.insert(validTools, {name = tool.Name, cat = cat})
+            end
+        end
+    end
+    if plr:FindFirstChild("Backpack") then
+        for _, tool in pairs(plr.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                local cat = GetToolCategory(tool.Name)
+                if cat ~= "Hidden" then
+                    table.insert(validTools, {name = tool.Name, cat = cat})
+                end
+            end
+        end
+    end
+
+    if #validTools == 0 then
+        bill.Enabled = false
+        return
+    end
+
+    -- === MOSTRAR MÁXIMO 5 + "Máx..." SI HAY MÁS ===
+    local displayText = ""
+    if #validTools > MAX_TOOLS_DISPLAY then
+        local names = {}
+        for i = 1, MAX_TOOLS_DISPLAY do
+            table.insert(names, validTools[i].name)
+        end
+        displayText = table.concat(names, ", ") .. ", Máx..."
+    else
+        local names = {}
+        for _, t in ipairs(validTools) do
+            table.insert(names, t.name)
+        end
+        displayText = table.concat(names, ", ")
+    end
+    label.Text = displayText
+
+    -- === COLOR + ANIMACIÓN BRAINROT BINARY ===
+    local firstCat = validTools[1].cat
+    local data = ToolsCategories[firstCat]
+
+    if firstCat == "Binary" and data.brainrot then
+        local time = tick() % 1.2
+        local progress = (math.sin(time * 5) + 1) / 2  -- Suave onda
+        label.TextColor3 = data.color:Lerp(data.flashColor, progress)
+    else
+        label.TextColor3 = data.color
+    end
+
+    bill.Enabled = true
+end
+
+RunService.Heartbeat:Connect(function()
+    if ToolsESP_Enabled and ToolsESP_Toggled then
+        for _, plr in Players:GetPlayers() do
+            UpdateToolsESP(plr)
+        end
+    end
+end)
+
+-- === TOGGLE + SLIDER ===
+sector15:AddToggle("Tools ESP (Muy Arriba)", false, function(state)
+    ToolsESP_Enabled = state
+    if not state then
+        for _, v in ToolsESP_Objects do if v and v.Parent then v:Destroy() end end
+        ToolsESP_Objects = {}
+    end
+end)
+
+sector15:AddSlider("Tamaño Tools ESP", 10, 30, 16, 1, function(v)
+    CurrentToolsTextSize = v
+end)
+
+-- Tecla T
+game:GetService("UserInputService").InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.KeyCode == Enum.KeyCode.T then
+        ToolsESP_Toggled = not ToolsESP_Toggled
+    end
+end)
+
+-- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIJO PARA SIEMPRE) ====================
 local ESP_Enabled = false
 local ESP_Holders = {}
 local CurrentNameColor = Color3.fromRGB(255, 255, 255)
-local CurrentTextSize = 15  -- ← TAMAÑO INICIAL DEL TEXTO
-
+local FriendColor = Color3.fromRGB(0, 255, 100)
+local CurrentTextSize = 5
 local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
 
+local FriendsList = {}
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local function IsFriend(plr)
+    local name = (plr.DisplayName ~= "" and plr.DisplayName or plr.Name):lower()
+    for _, f in FriendsList do
+        if f:lower() == name then return true end
+    end
+    return false
+end
+
 local function CreateESP(plr)
-    if plr == game.Players.LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+    if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
     if ESP_Holders[plr] then ESP_Holders[plr]:Destroy() end
 
     local bill = Instance.new("BillboardGui")
     bill.Adornee = plr.Character.Head
-    bill.Size = UDim2.new(0, 150, 0, 50)
-    bill.StudsOffset = Vector3.new(0, 2.5, 0)
+    bill.Size = UDim2.new(0, 400, 0, 70)
+    bill.StudsOffset = Vector3.new(0, 3.0, 0)
     bill.AlwaysOnTop = true
-    bill.Enabled = ESP_Enabled
+    bill.Parent = plr.Character.Head
 
     local text = Instance.new("TextLabel")
-    text.BackgroundTransparency = 1
     text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
     text.Text = plr.DisplayName ~= "" and plr.DisplayName or plr.Name
     text.FontFace = MinecraftFont
-    text.TextColor3 = CurrentNameColor
     text.TextStrokeTransparency = 0
-    text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    text.TextScaled = false  
-    text.TextSize = CurrentTextSize  
+    text.TextStrokeColor3 = Color3.new(0, 0, 0)
+    text.TextSize = CurrentTextSize
+    text.TextScaled = false
+    text.TextXAlignment = Enum.TextXAlignment.Center
+    text.TextColor3 = IsFriend(plr) and FriendColor or CurrentNameColor
     text.Parent = bill
 
-    bill.Parent = plr.Character.Head
     ESP_Holders[plr] = bill
 end
 
-local function UpdateAllESP()
-    for _, bill in pairs(ESP_Holders) do
+local function UpdateESP()
+    for plr, bill in pairs(ESP_Holders) do
         if bill and bill:FindFirstChild("TextLabel") then
-            bill.TextLabel.TextColor3 = CurrentNameColor
-            bill.TextLabel.TextSize = CurrentTextSize
+            local label = bill.TextLabel
+            label.TextSize = CurrentTextSize
+            label.TextColor3 = IsFriend(plr) and FriendColor or CurrentNameColor
         end
     end
 end
-local function RemoveAllESP()
-    for _, v in pairs(ESP_Holders) do
-        if v then v:Destroy() end
-    end
-    ESP_Holders = {}
-end
-game.Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function()
-        task.wait(1)
-        if ESP_Enabled then CreateESP(p) end
-    end)
-end)
-game.Players.PlayerRemoving:Connect(function(p)
-    if ESP_Holders[p] then ESP_Holders[p]:Destroy() ESP_Holders[p] = nil end
-end)
-for _, p in pairs(game.Players:GetPlayers()) do
-    if p.Character then
-        task.spawn(function()
-            task.wait(1)
-            if ESP_Enabled then CreateESP(p) end
-        end)
-    end
-    p.CharacterAdded:Connect(function()
-        task.wait(1)
-        if ESP_Enabled then CreateESP(p) end
-    end)
-end
-local espToggle = sector15:AddToggle("ESP Name", false, function(state)
-    ESP_Enabled = state
-    if state then
-        for _, plr in pairs(game.Players:GetPlayers()) do
-            if plr ~= game.Players.LocalPlayer and plr.Character then
+
+-- === LOOP QUE COMPRUEBA CADA FRAME A TODOS LOS JUGADORES (SOLUCIÓN DEFINITIVA) ===
+RunService.Heartbeat:Connect(function()
+    if not ESP_Enabled then return end
+    for _, plr in Players:GetPlayers() do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+            if not ESP_Holders[plr] then
                 CreateESP(plr)
             end
         end
-    else
-        RemoveAllESP()
     end
-end, Color3.fromRGB(170, 255, 0)):AddColorpicker(CurrentNameColor, function(col)
+end)
+
+-- === TOGGLE + OPCIONES EN sector15 ===
+sector15:AddToggle("ESP Name", false, function(state)
+    ESP_Enabled = state
+    if not state then
+        for _, v in ESP_Holders do if v then v:Destroy() end end
+        ESP_Holders = {}
+    end
+end)
+
+sector15:AddSlider("Size Name", 5, 5, 20, 1, function(v)
+    CurrentTextSize = v
+    UpdateESP()
+end)
+
+sector15:AddColorpicker("Color Normal", CurrentNameColor, function(col)
     CurrentNameColor = col
-    UpdateAllESP()
+    UpdateESP()
 end)
-espToggle:AddSlider("Size", 10, 40, 18, 1, function(value)
-    CurrentTextSize = value
-    UpdateAllESP() 
+
+sector15:AddColorpicker("Friend's Color", FriendColor, function(col)
+    FriendColor = col
+    UpdateESP()
 end)
--- ========================================================================================
+
+-- === FEATURE FRIEND ===
+local amigoNombre = ""
+
+sector15:AddTextbox("Friend's Name", "Ej: xSh4dow", function(text)
+    amigoNombre = text
+end)
+
+sector15:AddButton("Add Friend", function()
+    if amigoNombre ~= "" and amigoNombre ~= "Ej: xSh4dow" then
+        table.insert(FriendsList, amigoNombre)
+        warn("Friend added: " .. amigoNombre)
+        UpdateESP()
+        amigoNombre = ""
+    else
+        warn("Invalid name")
+    end
+end)
+
+sector15:AddButton("Clean Friends", function()
+    FriendsList = {}
+    warn("Cleaned list")
+    UpdateESP()
+end)
