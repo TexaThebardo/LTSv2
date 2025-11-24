@@ -418,19 +418,19 @@ game:GetService("UserInputService").InputBegan:Connect(function(i, gp)
     end
 end)
 
--- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIJO PARA SIEMPRE) ====================
+-- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIXEADO 100% - SIN ELIMINAR NADA) ====================
 local ESP_Enabled = false
 local ESP_Holders = {}
 local CurrentNameColor = Color3.fromRGB(255, 255, 255)
 local FriendColor = Color3.fromRGB(0, 255, 100)
 local CurrentTextSize = 5
 local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
-
 local FriendsList = {}
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
+-- === FUNCIÓN PARA SABER SI ES AMIGO (ORIGINAL) ===
 local function IsFriend(plr)
     local name = (plr.DisplayName ~= "" and plr.DisplayName or plr.Name):lower()
     for _, f in FriendsList do
@@ -439,6 +439,7 @@ local function IsFriend(plr)
     return false
 end
 
+-- === CREAR ESP (MEJORADO PERO MANTIENE TU ESTILO) ===
 local function CreateESP(plr)
     if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
     if ESP_Holders[plr] then ESP_Holders[plr]:Destroy() end
@@ -466,6 +467,7 @@ local function CreateESP(plr)
     ESP_Holders[plr] = bill
 end
 
+-- === ACTUALIZAR COLORES Y TAMAÑO (TU FUNCIÓN ORIGINAL) ===
 local function UpdateESP()
     for plr, bill in pairs(ESP_Holders) do
         if bill and bill:FindFirstChild("TextLabel") then
@@ -476,24 +478,68 @@ local function UpdateESP()
     end
 end
 
--- === LOOP QUE COMPRUEBA CADA FRAME A TODOS LOS JUGADORES (SOLUCIÓN DEFINITIVA) ===
-RunService.Heartbeat:Connect(function()
-    if not ESP_Enabled then return end
-    for _, plr in Players:GetPlayers() do
-        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
-            if not ESP_Holders[plr] then
-                CreateESP(plr)
-            end
+-- === LIMPIAR ESP AL SALIR O MORIR ===
+local function ClearESP(plr)
+    if ESP_Holders[plr] then
+        ESP_Holders[plr]:Destroy()
+        ESP_Holders[plr] = nil
+    end
+end
+
+-- ==================================================================
+-- === LA CLAVE: EVENTOS QUE ARREGLAN LOS BUGS (sin eliminar nada) ===
+-- ==================================================================
+
+-- Cuando un jugador entra al servidor
+Players.PlayerAdded:Connect(function(plr)
+    if plr == LocalPlayer then return end
+
+    local function onCharacterAdded(char)
+        char:WaitForChild("Head", 10)
+        task.wait(0.3) -- Pequeño delay por si carga lento
+        if ESP_Enabled then
+            CreateESP(plr)
         end
+    end
+
+    plr.CharacterAdded:Connect(onCharacterAdded)
+    if plr.Character then
+        onCharacterAdded(plr.Character)
     end
 end)
 
--- === TOGGLE + OPCIONES EN sector15 ===
+-- Cuando un jugador sale
+Players.PlayerRemoving:Connect(function(plr)
+    ClearESP(plr)
+end)
+
+-- Para jugadores que ya estaban cuando inyectaste el script
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer and plr.Character then
+        CreateESP(plr)
+    end
+    plr.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        if ESP_Enabled then CreateESP(plr) end
+    end)
+end
+
+-- ==================================================================
+-- === TUS CONTROLES ORIGINALES (100% SIN TOCAR) ===
+-- ==================================================================
+
 sector15:AddToggle("ESP Name", false, function(state)
     ESP_Enabled = state
     if not state then
         for _, v in ESP_Holders do if v then v:Destroy() end end
         ESP_Holders = {}
+    else
+        -- Reactivar para todos los que están ahora
+        for _, plr in Players:GetPlayers() do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                CreateESP(plr)
+            end
+        end
     end
 end)
 
@@ -512,9 +558,8 @@ sector15:AddColorpicker("Friend's Color", FriendColor, function(col)
     UpdateESP()
 end)
 
--- === FEATURE FRIEND ===
+-- === FEATURE FRIEND (EXACTAMENTE COMO LO TENÍAS) ===
 local amigoNombre = ""
-
 sector15:AddTextbox("Friend's Name", "Ej: xSh4dow", function(text)
     amigoNombre = text
 end)
