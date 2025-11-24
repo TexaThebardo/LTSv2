@@ -249,174 +249,219 @@ sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
 end)
 
 
--- ==================== ESP TOOLS ULTRA ÉPICO - POTATO CHIPS + MÁX... + BRAINROT BINARY ====================
+-- ==================== ESP TOOLS ULTRA ÉPICO - PRIORIDAD CATEGORÍAS (MEJOR TOOL SOLO) ====================
 local ToolsESP_Enabled = false
 local ToolsESP_Toggled = true
-local MAX_TOOLS_DISPLAY = 5  -- Máximo visible
-
-local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
+local MAX_TOOLS_DISPLAY = 5
 local CurrentToolsTextSize = 5
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 local ToolsESP_Objects = {}
 
--- === CATEGORÍAS (SOLO ESTOS TOOLS SE VERÁN) ===
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- === ORDEN DE PRIORIDAD (MEJOR → PEOR) ===
+local CategoryPriority = {"Drum", "Heavy", "Extended", "Default"}
+
+-- === TABLAS DE TOOLS ===
 local ToolsCategories = {
-    Default = {
-        color = Color3.fromRGB(200, 200, 200),
-        tools = {"Potato Chips"}  -- ← SOLO ESTE TOOL EN DEFAULT
-    },
-    Standard = {color = Color3.fromRGB(255, 255, 255), tools = {"Glock 23","Glock 43","Ruger P345","VP9","Glock 40 Gen 4","P226 Silenced","Glock 17",".357","Glock26","Taurus G2C","S&W M29","G19X","FNX 45","Staccato P","Staccato P Extended","TP9 Elite","FN 502 Tac","G17 Dual Laser","Glock 20","Hi-Point","Ruger LCP","Springfield XD","Revolver","Beretta","P320","M1911","Glock 34","G21S Vect Mag","G21 Vect Mag","Machete"}},
-    Extended = {color = Color3.fromRGB(255, 255, 0), tools = {"Glock 43 Extended","Glock 23 Extended","Ruger P345 Extended","VP9 Extended","G22EXT","Ruger Extended","Taurus TX22 EXT","Makarov Extended","G40 Extended","Silenced P226 Extended","P226 Extended","Barretta Extended","Glock 20 Ext","Glock Beam","M&P Ext","p320E","Springfield XD Mod","GlockS","Five-Seven","P80 Extended","H&K USP EXT","H&K USP","Glock 34 Extended","G40 Extended","G19X Ext","FN57"}},
-    Heavy = {color = Color3.fromRGB(0, 150, 255), tools = {"MPX","Honey Badger Pistol","DDM4 V7 Pistol","AR Pistol","Draco","Tec-9","MCX","PLR-16","ARP9"}},
-    Drum = {color = Color3.fromRGB(255, 150, 0), tools = {"ARP9 Clear Drum", "Black Micro Drac", "G26 Clear Drum", "MPX Drum", "G21S Drum", "DDM4 V7 Drum" , "Five-Seven Drum","ORK-16 Drum","P80 Drum","G22 Drum","Taurus Drum","AR Pistol Drum","SpringfieldXD Drum","MCX Drum","G19X Drum","Tec-9 Dru","FN57 Drum","Glock 23 Drum","VP9 Drum","GlockS Drum","Draco Drum","Hit-Point Drum","Glock 20 Drum"}},
-    Binary = {
-        color = Color3.fromRGB(255, 0, 0),
-        flashColor = Color3.fromRGB(0, 0, 0),
-        brainrot = true,
-        tools = {"Binary Black Draco", "Binary G17 Gen 5", "Binary 300 Blackout ARP", "Binary 6in AR9"}  -- ← AÑADE TUS BINARY AQUÍ
-    },
-    TiersHeavy = {color = Color3.fromRGB(0, 255, 255), tools = {"Suppressed MCX","Suppressed ARP","Whiteout ARP9 W/Purple Beam","Tan 300 Blackkout MCX",".308 AR-10","Honey Badger","M&P-15 Sport II","300 Blackout","Micro Draco","Micro Arp","Ak Draco"}},
-    TiersDrum = {color = Color3.fromRGB(180, 0, 255), tools = {".308 AR-10 Drum","Honey Badger Drum","M&P-15 Sport II Drum","Micro Draco Drum","300 Blackout Drum","AK Draco Drum","Micro ARP Drum"}}
+    Default = { color = Color3.fromRGB(200, 200, 200), tools = {"Glock 23","Glock 43","Ruger P345","VP9","Glock 40 Gen 4","P226 Silenced","Glock 17",".357","Glock26","Taurus G2C","S&W M29","G19X","FNX 45","Staccato P","Staccato P Extended","TP9 Elite","FN 502 Tac","G17 Dual Laser","Glock 20","Hi-Point","Ruger LCP","Springfield XD","Revolver","Beretta","P320","M1911","Glock 34","G21S Vect Mag","G21 Vect Mag","Glock 40 Gen 40 Gen 4","Machete"}},
+    Extended = { color = Color3.fromRGB(255,255,0), tools = {"Glock 43 Extended","Glock 23 Extended","Ruger P345 Extended","VP9 Extended","G22EXT","Ruger Extended","Taurus TX22 EXT","Makarov Extended","G40 Extended","Silenced P226 Extended","P226 Extended","Barretta Extended","Glock 20 Ext","Glock Beam","M&P Ext","p320E","Springfield XD Mod","GlockS","Five-Seven","P80 Extended","H&K USP EXT","H&K USP","Glock 34 Extended","G40 Extended","G19X Ext","FN57"}},
+    Heavy = { color = Color3.fromRGB(255,150,0), tools = {"MPX","Honey Badger Pistol","DDM4 V7 Pistol","AR Pistol","Draco","Tec-9","MCX","PLR-16","ARP9","Suppressed MCX","Suppressed ARP","Whiteout ARP9 W/Purple Beam","Tan 300 Blackkout MCX",".308 AR-10","Honey Badger","M&P-15 Sport II","300 Blackout","Micro Draco","Micro Arp","Ak Draco"}},
+    Drum = { color = Color3.fromRGB(255,0,0), tools = {".308 AR-10 Drum","Honey Badger Drum","M&P-15 Sport II Drum","Micro Draco Drum","300 Blackout Drum","AK Draco Drum","Micro ARP Drum","Five-Seven Drum","ORK-16 Drum","P80 Drum","G22 Drum","Taurus Drum","AR Pistol Drum","SpringfieldXD Drum","MCX Drum","G19X Drum","Tec-9 Dru","FN57 Drum","Glock 23 Drum","VP9 Drum","GlockS Drum","Draco Drum","Hit-Point Drum","Glock 20 Drum","G19XDrum"}}
 }
 
-local function GetToolCategory(toolName)
-    for cat, data in pairs(ToolsCategories) do
-        for _, name in data.tools do
-            if toolName:find(name) or name:find(toolName) then
-                return cat, data
+-- Sets para búsqueda rápida
+local ToolSet = {}
+for cat, data in pairs(ToolsCategories) do
+    ToolSet[cat] = {}
+    for _, name in ipairs(data.tools) do
+        ToolSet[cat][name:lower()] = true
+    end
+end
+
+-- === FUNCIÓN CLAVE: OBTENER MEJOR CATEGORÍA ===
+local function GetBestCategory(tools)
+    local bestCat = nil
+    local bestPriority = 999
+    
+    for _, tool in ipairs(tools) do
+        local cat = tool.cat
+        for priority, catName in ipairs(CategoryPriority) do
+            if cat == catName and priority < bestPriority then
+                bestPriority = priority
+                bestCat = cat
+                break
             end
         end
+    end
+    
+    return bestCat
+end
+
+local function GetToolCategory(name)
+    local low = name:lower()
+    for cat, set in pairs(ToolSet) do
+        if set[low] then return cat, ToolsCategories[cat].color end
     end
     return "Hidden", nil
 end
 
-local function UpdateToolsESP(plr)
+-- === CREAR ESP PARA UN JUGADOR ===
+local function CreateToolsESP(plr)
     if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+
+    if ToolsESP_Objects[plr] then
+        ToolsESP_Objects[plr]:Destroy()
+    end
+
     local head = plr.Character.Head
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "ToolsESP"
+    bill.Adornee = head
+    bill.Size = UDim2.new(0,500,0,70)
+    bill.StudsOffset = Vector3.new(0,7.5,0)
+    bill.AlwaysOnTop = true
+    bill.Parent = head
 
-    local bill = ToolsESP_Objects[plr]
-    if not bill or not bill.Parent then
-        bill = Instance.new("BillboardGui")
-        bill.Name = "ToolsESP_Epic"
-        bill.Adornee = head
-        bill.Size = UDim2.new(0, 500, 0, 70)
-        bill.StudsOffset = Vector3.new(0, 7.5, 0)
-        bill.AlwaysOnTop = true
-        bill.Parent = head
-
-        local text = Instance.new("TextLabel")
-        text.Size = UDim2.new(1, 0, 1, 0)
-        text.BackgroundTransparency = 1
-        text.Text = ""
-        text.FontFace = MinecraftFont
-        text.TextStrokeTransparency = 0
-        text.TextStrokeColor3 = Color3.new(0, 0, 0)
-        text.TextSize = CurrentToolsTextSize
-        text.TextScaled = false
-        text.TextXAlignment = Enum.TextXAlignment.Center
-        text.TextYAlignment = Enum.TextYAlignment.Center
-        text.Parent = bill
-
-        ToolsESP_Objects[plr] = bill
-    end
-
-    local label = bill.TextLabel
-
-    if not (ToolsESP_Enabled and ToolsESP_Toggled) then
-        bill.Enabled = false
-        return
-    end
-
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+    label.TextStrokeTransparency = 0
+    label.TextStrokeColor3 = Color3.new(0,0,0)
     label.TextSize = CurrentToolsTextSize
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Parent = bill
 
-    local validTools = {}
-    for _, tool in pairs(plr.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            local cat = GetToolCategory(tool.Name)
-            if cat ~= "Hidden" then
-                table.insert(validTools, {name = tool.Name, cat = cat})
+    ToolsESP_Objects[plr] = bill
+
+    task.spawn(function()
+        while ToolsESP_Objects[plr] == bill and plr.Character and plr.Character:FindFirstChild("Head") do
+            task.wait(0.4)
+            if not (ToolsESP_Enabled and ToolsESP_Toggled) then
+                bill.Enabled = false
+                continue
             end
-        end
-    end
-    if plr:FindFirstChild("Backpack") then
-        for _, tool in pairs(plr.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                local cat = GetToolCategory(tool.Name)
-                if cat ~= "Hidden" then
-                    table.insert(validTools, {name = tool.Name, cat = cat})
+
+            local allTools = {}
+            local hasDefault = false
+
+            local function scan(cont)
+                if cont then
+                    for _, tool in cont:GetChildren() do
+                        if tool:IsA("Tool") then
+                            local cat, col = GetToolCategory(tool.Name)
+                            if cat ~= "Hidden" then
+                                table.insert(allTools, {name=tool.Name, cat=cat, color=col})
+                                if cat == "Default" then hasDefault = true end
+                            end
+                        end
+                    end
                 end
             end
+
+            scan(plr.Character)
+            scan(plr:FindFirstChild("Backpack"))
+
+            -- === LÓGICA NUEVA: SOLO MEJOR CATEGORÍA ===
+            if hasDefault and #allTools > 0 then
+                local bestCatName = GetBestCategory(allTools)
+                if bestCatName then
+                    -- FILTRAR SOLO tools de la MEJOR categoría
+                    local bestTools = {}
+                    for _, tool in ipairs(allTools) do
+                        if tool.cat == bestCatName then
+                            table.insert(bestTools, tool)
+                        end
+                    end
+                    
+                    -- Mostrar máximo 5 de la MEJOR categoría
+                    local names = {}
+                    for i = 1, math.min(MAX_TOOLS_DISPLAY, #bestTools) do
+                        table.insert(names, bestTools[i].name)
+                    end
+                    local txt = table.concat(names, ", ")
+                    if #bestTools > MAX_TOOLS_DISPLAY then txt = txt .. ", Máx..." end
+                    
+                    label.Text = txt
+                    label.TextColor3 = ToolsCategories[bestCatName].color
+                    label.TextSize = CurrentToolsTextSize
+                    bill.Enabled = true
+                else
+                    bill.Enabled = false
+                end
+            else
+                bill.Enabled = false
+            end
         end
-    end
-
-    if #validTools == 0 then
-        bill.Enabled = false
-        return
-    end
-
-    -- === MOSTRAR MÁXIMO 5 + "Máx..." SI HAY MÁS ===
-    local displayText = ""
-    if #validTools > MAX_TOOLS_DISPLAY then
-        local names = {}
-        for i = 1, MAX_TOOLS_DISPLAY do
-            table.insert(names, validTools[i].name)
-        end
-        displayText = table.concat(names, ", ") .. ", Máx..."
-    else
-        local names = {}
-        for _, t in ipairs(validTools) do
-            table.insert(names, t.name)
-        end
-        displayText = table.concat(names, ", ")
-    end
-    label.Text = displayText
-
-    -- === COLOR + ANIMACIÓN BRAINROT BINARY ===
-    local firstCat = validTools[1].cat
-    local data = ToolsCategories[firstCat]
-
-    if firstCat == "Binary" and data.brainrot then
-        local time = tick() % 1.2
-        local progress = (math.sin(time * 5) + 1) / 2  -- Suave onda
-        label.TextColor3 = data.color:Lerp(data.flashColor, progress)
-    else
-        label.TextColor3 = data.color
-    end
-
-    bill.Enabled = true
+    end)
 end
 
-RunService.Heartbeat:Connect(function()
-    if ToolsESP_Enabled and ToolsESP_Toggled then
-        for _, plr in Players:GetPlayers() do
-            UpdateToolsESP(plr)
+-- === ACTIVAR PARA TODOS ===
+local function ApplyToAllPlayers()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+            CreateToolsESP(plr)
         end
     end
-end)
+end
 
--- === TOGGLE + SLIDER ===
+-- === TOGGLE (ACTIVA EN TODOS) ===
 sector15:AddToggle("ESP Guns", false, function(state)
     ToolsESP_Enabled = state
-    if not state then
-        for _, v in ToolsESP_Objects do if v and v.Parent then v:Destroy() end end
+    if state then
+        ApplyToAllPlayers()
+    else
+        for _, bill in pairs(ToolsESP_Objects) do
+            if bill and bill.Parent then bill:Destroy() end
+        end
         ToolsESP_Objects = {}
     end
 end)
 
-sector15:AddSlider("Size tools:", 5, 5, 20, 1, function(v)
+sector15:AddSlider("Size Tools", 5, 5, 50, 1, function(v)
     CurrentToolsTextSize = v
 end)
 
 -- Tecla T
 game:GetService("UserInputService").InputBegan:Connect(function(i, gp)
-    if gp then return end
-    if i.KeyCode == Enum.KeyCode.T then
+    if not gp and i.KeyCode == Enum.KeyCode.T then
         ToolsESP_Toggled = not ToolsESP_Toggled
+        if ToolsESP_Toggled and ToolsESP_Enabled then
+            ApplyToAllPlayers()
+        end
     end
 end)
+
+-- Jugadores nuevos y respawn
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(1)
+        if ToolsESP_Enabled and ToolsESP_Toggled then
+            CreateToolsESP(plr)
+        end
+    end)
+end)
+
+for _, plr in Players:GetPlayers() do
+    if plr ~= LocalPlayer then
+        plr.CharacterAdded:Connect(function()
+            task.wait(1)
+            if ToolsESP_Enabled and ToolsESP_Toggled then
+                CreateToolsESP(plr)
+            end
+        end)
+        if plr.Character then
+            task.spawn(function()
+                task.wait(1)
+                if ToolsESP_Enabled and ToolsESP_Toggled then
+                    CreateToolsESP(plr)
+                end
+            end)
+        end
+    end
+end
 
 -- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIXEADO 100% - SIN ELIMINAR NADA) ====================
 local ESP_Enabled = false
