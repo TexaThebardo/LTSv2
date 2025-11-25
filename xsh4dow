@@ -1,10 +1,12 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("V2.5 | LTS X South Bronx ❗      Press [F1]", Vector2.new(350, 400), Enum.KeyCode.F1)
+local win = lib:CreateWindow("V2.5 |❗ LTS X South Bronx ❗", Vector2.new(350, 400), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("Combat")
 local tab2 = win:CreateTab("Visual")
+local tab3 = win:CreateTab("Player") -- NUEVO TAB 3
 local sector1 = tab1:CreateSector("Camlock Category","left")
 local sector10 = tab1:CreateSector("Fov Category","right")
 local sector15 = tab2:CreateSector("ESP Category","left")
+local sector20 = tab3:CreateSector("Auto Marshmallow", "left") -- Sector con número automático
 
 getgenv().OldAimPart = "HumanoidRootPart"
 getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
@@ -624,4 +626,130 @@ sector15:AddButton("Clean Friends", function()
     FriendsList = {}
     warn("Cleaned list")
     UpdateESP()
+end)
+
+getgenv().AutoPressEnabled = false
+getgenv().ClickInterval = 1.5
+
+local ToolPriority = {
+    "water",
+    "Sugar Block Bag",
+    "Gelatin",
+    "Empty Bag"
+}
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local currentIndex = 1
+local lastClickTime = 0
+local loopTask = nil
+
+-- ENCUENTRA Y EQUIPA EL TOOL DE LA PRIORIDAD ACTUAL
+local function equipToolForCurrentIndex()
+    local targetName = ToolPriority[currentIndex]
+    local lowerName = string.lower(targetName)
+
+    -- BUSCAR EN BACKPACK PRIMERO (para usar uno nuevo)
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and string.find(string.lower(tool.Name), lowerName) then
+            humanoid:UnequipTools()
+            task.wait(0.25)  -- TIEMPO CRÍTICO PARA QUE EL JUEGO REGISTRE
+            humanoid:EquipTool(tool)
+            print("EQUIPADO → " .. tool.Name .. " (Posición " .. currentIndex .. "/4)")
+            task.wait(0.3)   -- ESPERA EXTRA PARA QUE EL TOOL ESTÉ 100% ACTIVO
+            return true
+        end
+    end
+
+    -- SI NO HAY EN BACKPACK, BUSCAR SI YA ESTÁ EQUIPADO
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") and string.find(string.lower(tool.Name), lowerName) then
+            print("YA EQUIPADO → " .. tool.Name)
+            task.wait(0.3)
+            return true
+        end
+    end
+
+    return false
+end
+
+-- CLICK E (SIMULA TECLA REAL)
+local function pressEKey()
+    local VIM = game:GetService("VirtualInputManager")
+    VIM:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    task.wait(0.06)
+    VIM:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    print("E PRESIONADO")
+end
+
+-- LOOP PRINCIPAL – CAMBIA TOOL DESPUÉS DEL CLICK
+local function startLoop()
+    if loopTask then task.cancel(loopTask) end
+
+    loopTask = task.spawn(function()
+        while getgenv().AutoPressEnabled do
+            task.wait(0.1)
+
+            -- ACTUALIZAR PERSONAJE
+            if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+                player.CharacterAdded:Wait()
+                character = player.Character
+                humanoid = character:WaitForChild("Humanoid")
+                hrp = character:WaitForChild("HumanoidRootPart")
+            end
+
+            -- 1. EQUIPAR TOOL DE LA PRIORIDAD ACTUAL
+            local equipped = equipToolForCurrentIndex()
+
+            if not equipped then
+                print("NO HAY MÁS " .. ToolPriority[currentIndex] .. " – Saltando...")
+            end
+
+            -- 2. ESPERAR HASTA QUE SEA HORA DEL SIGUIENTE CLICK
+            while tick() - lastClickTime < getgenv().ClickInterval do
+                if not getgenv().AutoPressEnabled then return end
+                task.wait(0.1)
+            end
+
+            -- 3. HACER CLICK E
+            pressEKey()
+            lastClickTime = tick()
+
+            -- 4. CAMBIAR AL SIGUIENTE TOOL EN ORDEN (LO MÁS IMPORTANTE)
+            currentIndex = currentIndex + 1
+            if currentIndex > #ToolPriority then
+                currentIndex = 1
+            end
+
+            task.wait(0.1)  -- Pequeña pausa antes del próximo ciclo
+        end
+    end)
+end
+
+-- TOGGLE PRINCIPAL
+sector20:AddToggle("Marshmallow ¡BETA!", false, function(state)
+    getgenv().AutoPressEnabled = state
+
+    if state then
+        currentIndex = 1
+        lastClickTime = 0
+        print("AUTO PRESS ACTIVADO → water → Sugar → Gelatin → Empty → REPITE")
+        startLoop()
+    else
+        print("Auto Press DESACTIVADO")
+        if humanoid then humanoid:UnequipTools() end
+        if loopTask then task.cancel(loopTask) end
+    end
+end)
+
+-- RESPAWN
+player.CharacterAdded:Connect(function(c)
+    task.wait(2)
+    character = c
+    humanoid = c:WaitForChild("Humanoid")
+    hrp = c:WaitForChild("HumanoidRootPart")
 end)
