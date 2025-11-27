@@ -6,7 +6,9 @@ local tab3 = win:CreateTab("Player") -- NUEVO TAB 3
 local sector1 = tab1:CreateSector("Camlock Category","left")
 local sector10 = tab1:CreateSector("Fov Category","right")
 local sector15 = tab2:CreateSector("ESP Category","left")
+local sector16 = tab2:CreateSector("ESP V2 Category","right")
 local sector20 = tab3:CreateSector("Auto Marshmallow", "left") -- Sector con número automático
+local sector21 = tab3:CreateSector("Character", "right")
 
 getgenv().OldAimPart = "HumanoidRootPart"
 getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
@@ -251,6 +253,7 @@ sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
 end)
 
 -- ==================== ESP GUNS FINAL - 100% FIJADO (RESPAWN + NUEVOS JUGADORES) ====================
+-- ==================== ESP GUNS FINAL - 100% FIJADO (RESPAWN + NUEVOS JUGADORES) ====================
 local ToolsESP_Enabled = false
 local ToolsESP_Objects = {}
 local Players = game:GetService("Players")
@@ -258,13 +261,13 @@ local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
 -- TAMAÑO DEL TEXTO
-local CurrentToolsTextSize = 5
+local CurrentToolsTextSize = 15
 
 -- BLACKLIST
 local Blacklist = {
-    "Clip", "Fake ID", "Fist", "Phone", "CrowBar", "Water", "Sugar Block Bag", "Lockpick", 
-    "Gelatin", "Magazine", "Mag", "Speed Loader", "Attachment", "Silencer", "Suppressor", 
-    "Extended Clip", "Potato", "Flour", "SkiMask", "Drum Magazine", "Standard Clip", 
+    "Clip", "Fake ID", "Fist", "Phone", "CrowBar", "Water", "Sugar Block Bag", "Lockpick",
+    "Gelatin", "Magazine", "Mag", "Speed Loader", "Attachment", "Silencer", "Suppressor",
+    "Extended Clip", "Card", "Flour", "SkiMask", "Drum Magazine", "Standard Clip",
     "Heavy Magazine", "Flashlight", "Empty Bag", "Laser", "Grip"
 }
 
@@ -279,6 +282,7 @@ local HeavyGuns = {
 -- ANIMACIÓN RESPIRACIÓN DRUM
 local DrumBreathingColor = Color3.fromRGB(255, 0, 0)
 local BreathingActive = false
+
 RunService.Heartbeat:Connect(function()
     if not BreathingActive then return end
     local t = tick() * 2
@@ -299,30 +303,29 @@ local function IsBlacklisted(name)
 end
 
 local function GetToolInfo(name)
-    if not name or IsBlacklisted(name) then return end
+    if not name or IsBlacklisted(name) then return nil end
     local l = string.lower(name)
     if string.find(l, "drum") then
         return name, DrumBreathingColor, 1
     end
     for _, h in ipairs(HeavyGuns) do
         if string.find(l, string.lower(h)) then
-            return name, Color3.fromRGB(255,150,0), 2
+            return name, Color3.fromRGB(255, 150, 0), 2
         end
     end
-    return name, Color3.fromRGB(255,255,255), 3
+    return name, Color3.fromRGB(255, 255, 255), 3
 end
 
--- FUNCIÓN PRINCIPAL DEL ESP (se llama cada vez que se necesita)
+-- FUNCIÓN PRINCIPAL DEL ESP
 local function UpdateESP(plr)
-    if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then 
+    if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then
         if ToolsESP_Objects[plr] then
             ToolsESP_Objects[plr]:Destroy()
             ToolsESP_Objects[plr] = nil
         end
-        return 
+        return
     end
 
-    -- Si ya existe, lo reutilizamos
     local bill = ToolsESP_Objects[plr]
     if not bill or not bill.Parent then
         bill = Instance.new("BillboardGui")
@@ -344,11 +347,10 @@ local function UpdateESP(plr)
         label.Parent = bill
 
         ToolsESP_Objects[plr] = bill
-        bill.Label = label  -- guardamos referencia
+        bill.Label = label
     end
 
     local label = bill:FindFirstChild("TextLabel") or bill.Label
-
     local allTools = {}
     local hasDrum = false
 
@@ -356,9 +358,9 @@ local function UpdateESP(plr)
         if cont then
             for _, tool in pairs(cont:GetChildren()) do
                 if tool:IsA("Tool") then
-                    local n, c, p = GetToolInfo(tool.Name)
+                    local n, c, p = GetToolInfo(tool.Name)  -- ← LÍNEA CORREGIDA (AHORA SÍ TOMA EL COLOR NARANJA)
                     if n then
-                        table.insert(allTools, {name=n, color=c, prio=p})
+                        table.insert(allTools, {name = n, color = c, prio = p})
                         if p == 1 then hasDrum = true end
                     end
                 end
@@ -378,7 +380,7 @@ local function UpdateESP(plr)
         if #allTools > 5 then txt = txt .. ", Máx..." end
 
         label.Text = txt
-        label.TextColor3 = allTools[1].color
+        label.TextColor3 = allTools[1].color  -- ← Ahora sí aplica naranja si es heavy, rojo si es drum
         label.TextSize = CurrentToolsTextSize
         bill.Enabled = true
     else
@@ -404,11 +406,16 @@ sector15:AddToggle("ESP Guns", false, function(state)
 end)
 
 -- SLIDER TAMAÑO
-sector15:AddSlider("Size Tools", 5, CurrentToolsTextSize, 30, 1, function(v)
+sector15:AddSlider("Size Tools", 15, CurrentToolsTextSize, 30, 1, function(v)
     CurrentToolsTextSize = v
+    for _, bill in pairs(ToolsESP_Objects) do
+        if bill and bill.Label then
+            bill.Label.TextSize = v
+        end
+    end
 end)
 
--- BUCLE PRINCIPAL (actualiza cada 0.7s a todos los jugadores)
+-- BUCLE PRINCIPAL
 RunService.Heartbeat:Connect(function()
     if not ToolsESP_Enabled then return end
     for _, plr in Players:GetPlayers() do
@@ -418,7 +425,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- EVENTOS DE RESPAWN Y NUEVOS JUGADORES (100% FIJOS)
+-- EVENTOS DE RESPAWN Y NUEVOS JUGADORES
 Players.PlayerAdded:Connect(function(plr)
     plr.CharacterAdded:Connect(function()
         task.wait(2.5)
@@ -426,7 +433,6 @@ Players.PlayerAdded:Connect(function(plr)
     end)
 end)
 
--- Para jugadores que ya estaban
 for _, plr in Players:GetPlayers() do
     if plr ~= LocalPlayer then
         if plr.Character then
@@ -446,8 +452,8 @@ local ESP_Enabled = false
 local ESP_Holders = {}
 local CurrentNameColor = Color3.fromRGB(255, 255, 255)
 local FriendColor = Color3.fromRGB(0, 255, 100)
-local CurrentTextSize = 5
-local MinecraftFont = Font.new("rbxasset://fonts/families/PressStart2P.json")
+local CurrentTextSize = 10
+local MinecraftFont = Font.new("rbxasset://fonts/families/SourceSansPro.json")
 local FriendsList = {}
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -566,7 +572,7 @@ sector15:AddToggle("ESP Name", false, function(state)
     end
 end)
 
-sector15:AddSlider("Size Name", 5, 5, 20, 1, function(v)
+sector15:AddSlider("Size Name", 10, 10, 30, 1, function(v)
     CurrentTextSize = v
     UpdateESP()
 end)
@@ -610,7 +616,7 @@ getgenv().MarshInterval = 1.42  -- Velocidad fija y segura (380-420 marshmallows
 local Players = game:GetService("Players")
 local VIM = game:GetService("VirtualInputManager")
 local player = Players.LocalPlayer
-local ToolPriority = {"water", "Sugar Block Bag", "Gelatin", "Empty Bag"}
+local ToolPriority = {"Water", "Sugar Block Bag", "Gelatin", "Empty Bag"}
 local currentIndex = 1
 local lastPress = 0
 local loopRunning = false
@@ -672,6 +678,101 @@ local function startLoop()
         loopRunning = false
     end)
 end
+
+-- ==================== ESP BOX 2D FINAL - AHORA EN TAB VISUAL (SECTOR15) ====================
+local ESPBox_Enabled = false
+local ESPBox_Thickness = 0.8
+local ESPBox_Color = Color3.fromRGB(255, 255, 255)
+local ESPBox_Table = {}
+
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function ClearBox(plr)
+    if ESPBox_Table[plr] and ESPBox_Table[plr].Box then
+        ESPBox_Table[plr].Box:Remove()
+        ESPBox_Table[plr] = nil
+    end
+end
+
+local function CreateBox(plr)
+    if plr == LocalPlayer then return end
+    ClearBox(plr)
+
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = ESPBox_Color
+    Box.Thickness = ESPBox_Thickness
+    Box.Filled = false
+    Box.Transparency = 1
+
+    ESPBox_Table[plr] = { Box = Box }
+end
+
+local function UpdateBoxes()
+    if not ESPBox_Enabled then return end
+
+    for plr, data in pairs(ESPBox_Table) do
+        local Box = data.Box
+        local char = plr.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then
+            Box.Visible = false
+            continue
+        end
+
+        local root = char.HumanoidRootPart
+        local head = char:FindFirstChild("Head")
+        if not head then Box.Visible = false continue end
+
+        local rootPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+        if not onScreen then Box.Visible = false continue end
+
+        local top = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.7, 0))
+        local bottom = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 4, 0))
+        local height = math.clamp(math.abs(top.Y - bottom.Y), 30, 3000)
+        local width = height * 0.55  -- Box estrecho y perfecto
+
+        Box.Size = Vector2.new(width, height)
+        Box.Position = Vector2.new(rootPos.X - width/2, rootPos.Y - height/2)
+        Box.Color = ESPBox_Color
+        Box.Thickness = ESPBox_Thickness
+        Box.Visible = true
+    end
+end
+
+-- Jugadores actuales + respawn + nuevos jugadores
+for _, plr in Players:GetPlayers() do
+    if plr ~= LocalPlayer then
+        CreateBox(plr)
+        plr.CharacterAdded:Connect(function() task.wait(0.8) CreateBox(plr) end)
+    end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function() task.wait(0.8) CreateBox(plr) end)
+end)
+
+Players.PlayerRemoving:Connect(ClearBox)
+
+RunService.RenderStepped:Connect(UpdateBoxes)
+
+-- AQUÍ ESTÁ LA CLAVE: LO PONEMOS EN sector15 (TAB VISUAL) PARA QUE NO ROMPA NADA
+sector15:AddToggle("ESP Box", false, function(state)
+    ESPBox_Enabled = state
+    if not state then
+        for _, v in pairs(ESPBox_Table) do if v.Box then v.Box.Visible = false end end
+    end
+end)
+
+sector15:AddSlider("Box Thickness", 1, 1, 10, 1, function(v)
+    ESPBox_Thickness = v
+end)
+
+sector15:AddColorpicker("Box Color", ESPBox_Color, function(c)
+    ESPBox_Color = c
+end)
 
 -- === SOLO EL TOGGLE (SIN SLIDER NI BOTÓN DE TEST) ===
 sector20:AddToggle("Auto Marshmallow", false, function(state)
