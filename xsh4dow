@@ -875,3 +875,132 @@ sector21:AddButton("Restore Graphics", function()
     RestoreGraphics()
     print("Graphics restaurados al 100%")
 end)
+
+
+-- ===================== LTS WATERFALL HUD ROJO MINI – ARRIBA + ANIMACIÓN (FUNCIONA 100%) =====================
+-- ===================== LTS WATERFALL HUD ROJO MINI – FIX ESPACIOS + USERNAME REAL =====================
+
+local Players            = game:GetService("Players")
+local RunService         = game:GetService("RunService")
+local Stats              = game:GetService("Stats")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService       = game:GetService("TweenService")
+local LocalPlayer        = Players.LocalPlayer
+local CoreGui            = game:GetService("CoreGui")
+
+-- ELIMINAR HUD VIEJO
+for _, gui in pairs(CoreGui:GetChildren()) do
+    if gui.Name == "LTSWaterfall_HUD" then gui:Destroy() end
+end
+
+-- CREAR HUD
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LTSWaterfall_HUD"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local HUD = Instance.new("Frame")
+HUD.Size = UDim2.new(0, 240, 0, 40)
+HUD.Position = UDim2.new(0.5, -120, 0, -50)
+HUD.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+HUD.BackgroundTransparency = 0.15
+HUD.BorderSizePixel = 0
+HUD.Active = true
+HUD.Draggable = true
+HUD.Parent = ScreenGui
+
+Instance.new("UICorner", HUD).CornerRadius = UDim.new(0, 8)
+
+local Stroke = Instance.new("UIStroke", HUD)
+Stroke.Color = Color3.fromRGB(255, 20, 20)
+Stroke.Thickness = 2
+Stroke.Transparency = 0.1
+
+-- Avatar
+local Avatar = Instance.new("ImageLabel", HUD)
+Avatar.Size = UDim2.new(0, 32, 0, 32)
+Avatar.Position = UDim2.new(0, 7, 0.5, -16)
+Avatar.BackgroundTransparency = 1
+pcall(function()
+    Avatar.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+end)
+Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", Avatar).Color = Color3.fromRGB(255, 40, 40)
+Instance.new("UIStroke", Avatar).Thickness = 2
+
+-- Función texto simple
+local function T(text, x, y, col, size)
+    local lbl = Instance.new("TextLabel", HUD)
+    lbl.BackgroundTransparency = 1
+    lbl.Position = UDim2.new(0, x, 0, y)
+    lbl.Size = UDim2.new(0, 120, 0, size or 11)
+    lbl.Text = text
+    lbl.TextColor3 = col or Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = size or 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextScaled = false
+    return lbl
+end
+
+-- Etiquetas fijas
+T("Fps:",  48,  6)
+T("Ping:", 48, 22)
+T("Server:", 132, 6)
+T("Name:", 132, 22)
+
+-- Valores
+local FPSLabel  = T("60",  73,  6, Color3.fromRGB(0,255,0), 11)   -- ← "60 FPS" con espacio
+local PingLabel = T("0 MS",    80, 22, Color3.fromRGB(0,255,0), 11)  -- ← "0 MS" con espacio
+
+-- GAME: AUTO-SCALED
+local GameName = Instance.new("TextLabel", HUD)
+GameName.BackgroundTransparency = 1
+GameName.Position = UDim2.new(0, 172, 0, 6)
+GameName.Size = UDim2.new(0, 90, 0, 14)
+GameName.Font = Enum.Font.GothamBold
+GameName.TextColor3 = Color3.fromRGB(255, 100, 100)
+GameName.TextXAlignment = Enum.TextXAlignment.Left
+GameName.TextScaled = true
+GameName.Text = "Loading..."
+
+-- NAME: USERNAME REAL (LocalPlayer.Name) + AUTO-SCALED
+local NameLabel = Instance.new("TextLabel", HUD)
+NameLabel.BackgroundTransparency = 1
+NameLabel.Position = UDim2.new(0, 172, 0, 22)
+NameLabel.Size = UDim2.new(0, 90, 0, 14)
+NameLabel.Font = Enum.Font.GothamBold
+NameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+NameLabel.TextScaled = false
+NameLabel.Text = LocalPlayer.Name  -- ← USERNAME REAL (no DisplayName)
+
+-- Cargar nombre del juego
+spawn(function()
+    pcall(function()
+        local info = MarketplaceService:GetProductInfo(game.PlaceId)
+        GameName.Text = info.Name or "Unknown Game"
+    end)
+end)
+
+
+-- PING + COLOR DINÁMICO (con " MS")
+task.spawn(function()
+    while task.wait(0.4) do
+        pcall(function()
+            local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            PingLabel.Text = ping .. " MS"  -- ← Con espacio
+            
+            PingLabel.TextColor3 = ping <= 50 and Color3.fromRGB(0,255,0) or
+                                   ping <= 100 and Color3.fromRGB(255,255,0) or
+                                   ping <= 150 and Color3.fromRGB(255,150,0) or
+                                   Color3.fromRGB(255,30,30)
+        end)
+    end
+end)
+
+-- ANIMACIÓN DE ENTRADA
+TweenService:Create(HUD, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+    Position = UDim2.new(0.5, -120, 0, 10)
+}):Play()
+
