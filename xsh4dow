@@ -1,5 +1,5 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("V2.5 |❗ LTS X South Bronx ❗", Vector2.new(390, 400), Enum.KeyCode.F1)
+local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: 3.2 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("Combat")
 local tab2 = win:CreateTab("Visual")
 local tab3 = win:CreateTab("Player") -- NUEVO TAB 3
@@ -268,7 +268,7 @@ local Blacklist = {
     "Clip", "Fake ID", "Fist", "Phone", "CrowBar", "Water", "Sugar Block Bag", "Lockpick",
     "Gelatin", "Magazine", "Mag", "Speed Loader", "Attachment", "Silencer", "Suppressor",
     "Extended Clip", "Card", "Flour", "SkiMask", "Drum Magazine", "Standard Clip",
-    "Heavy Magazine", "Flashlight", "Empty Bag", "Laser", "Grip"
+    "Heavy Magazine", "Flashlight", "Empty Bag", "Crate", "Laser", "Grip"
 }
 
 -- HEAVY
@@ -787,4 +787,91 @@ sector20:AddToggle("Auto Marshmallow", false, function(state)
             player.Character.Humanoid:UnequipTools()
         end
     end
+end)
+
+-- TAB3 → SECTOR21  |  LOW GRAPHICS + QUITAR TEXTURAS
+local LowGraphics_Enabled = false
+local OriginalSettings = {}
+
+-- Guardamos los settings originales para poder restaurarlos
+local function SaveOriginal()
+    if OriginalSettings.Saved then return end
+    OriginalSettings.QualityLevel = settings().Rendering.QualityLevel
+    OriginalSettings.Saved = true
+end
+
+-- Aplicar Low Graphics + Quitar texturas
+local function ApplyLowGraphics()
+    -- Bajamos los gráficos a nivel 2
+    settings().Rendering.QualityLevel = 2
+    
+    -- Quitamos TODAS las texturas del mapa (menos tu personaje)
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj ~= LocalPlayer.Character and obj:IsA("BasePart") then
+            if obj.Material ~= Enum.Material.Plastic and obj.Material ~= Enum.Material.SmoothPlastic then
+                obj.Material = Enum.Material.SmoothPlastic
+            end
+            obj.Transparency = obj.Transparency > 0.9 and obj.Transparency or 0
+            if obj:FindFirstChildOfClass("Decal") then obj:FindFirstChildOfClass("Decal").Transparency = 1 end
+            if obj:FindFirstChildOfClass("Texture") then obj:FindFirstChildOfClass("Texture").Transparency = 1 end
+        end
+        
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            if not obj.Parent or not obj.Parent.Parent or obj.Parent.Parent ~= LocalPlayer.Character then
+                obj.Transparency = 1
+            end
+        end
+        
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+            obj.Enabled = false
+        end
+        
+        if obj:IsA("MeshPart") and obj ~= LocalPlayer.Character then
+            obj.TextureID = ""
+            obj.Material = Enum.Material.SmoothPlastic
+        end
+    end
+end
+
+-- Restaurar todo al estado original
+local function RestoreGraphics()
+    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 10
+    
+    -- Reactivamos partículas
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+            obj.Enabled = true
+        end
+    end
+end
+
+-- TOGGLE PRINCIPAL
+sector21:AddToggle("Low Graphics", false, function(state)
+    LowGraphics_Enabled = state
+    SaveOriginal()
+    
+    if state then
+        ApplyLowGraphics()
+        -- Reaplicar cada vez que spawnea algo nuevo (opcional pero recomendado)
+        workspace.DescendantAdded:Connect(function(obj)
+            if LowGraphics_Enabled then
+                task.wait()
+                if obj:IsA("BasePart") and obj.Parent ~= LocalPlayer.Character then
+                    obj.Material = Enum.Material.SmoothPlastic
+                end
+                if (obj:IsA("Decal") or obj:IsA("Texture")) and (not obj.Parent or obj.Parent.Parent ~= LocalPlayer.Character) then
+                    obj.Transparency = 1
+                end
+            end
+        end)
+    else
+        RestoreGraphics()
+    end
+end)
+
+-- BOTÓN EXTRA PARA FORZAR RESTAURAR (por si algo se buguea)
+sector21:AddButton("Restore Graphics", function()
+    LowGraphics_Enabled = false
+    RestoreGraphics()
+    print("Graphics restaurados al 100%")
 end)
