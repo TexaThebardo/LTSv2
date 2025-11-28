@@ -1,5 +1,5 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: 3.2 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
+local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: v3.5 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("Combat")
 local tab2 = win:CreateTab("Visual")
 local tab3 = win:CreateTab("Player") -- NUEVO TAB 3
@@ -251,201 +251,6 @@ end)
 sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
 	circle.Radius = L_130_arg0
 end)
-
--- ==================== ESP GUNS FINAL - 100% FIJADO (RESPAWN + NUEVOS JUGADORES) ====================
--- ==================== ESP GUNS FINAL - 100% FIJADO (RESPAWN + NUEVOS JUGADORES) ====================
-local ToolsESP_Enabled = false
-local ToolsESP_Objects = {}
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-
--- TAMAÑO DEL TEXTO
-local CurrentToolsTextSize = 15
-
--- BLACKLIST
-local Blacklist = {
-    "Clip", "Fake ID", "Fist", "Phone", "CrowBar", "Water", "Sugar Block Bag", "Lockpick",
-    "Gelatin", "Magazine", "Mag", "Speed Loader", "Attachment", "Silencer", "Suppressor",
-    "Extended Clip", "Card", "Flour", "SkiMask", "Drum Magazine", "Standard Clip",
-    "Heavy Magazine", "Flashlight", "Empty Bag", "Crate", "Laser", "Grip"
-}
-
--- HEAVY
-local HeavyGuns = {
-    "PRL-16", "ARP9", "MPX", "Honey Badger Pistol", "DDM4 V7 Pistol", "AR Pistol",
-    "Draco", "Tec-9", "MCX", ".308 AR-10", "Honey Badger", "M&P-15 Sport II",
-    "300 Blackout", "Micro Draco", "Micro ARP", "AK Draco", "Suppressed MCX",
-    "Suppressed ARP", "Whiteout AR9"
-}
-
--- ANIMACIÓN RESPIRACIÓN DRUM
-local DrumBreathingColor = Color3.fromRGB(255, 0, 0)
-local BreathingActive = false
-
-RunService.Heartbeat:Connect(function()
-    if not BreathingActive then return end
-    local t = tick() * 2
-    local lerp = (math.sin(t) + 1) / 2
-    DrumBreathingColor = Color3.fromRGB(
-        255 - math.floor(150 * lerp),
-        math.floor(0 + 1 * lerp),
-        math.floor(0 + 1 * lerp)
-    )
-end)
-
-local function IsBlacklisted(name)
-    local l = string.lower(name)
-    for _, b in ipairs(Blacklist) do
-        if string.find(l, string.lower(b)) then return true end
-    end
-    return false
-end
-
-local function GetToolInfo(name)
-    if not name or IsBlacklisted(name) then return nil end
-    local l = string.lower(name)
-    if string.find(l, "drum") then
-        return name, DrumBreathingColor, 1
-    end
-    for _, h in ipairs(HeavyGuns) do
-        if string.find(l, string.lower(h)) then
-            return name, Color3.fromRGB(255, 150, 0), 2
-        end
-    end
-    return name, Color3.fromRGB(255, 255, 255), 3
-end
-
--- FUNCIÓN PRINCIPAL DEL ESP
-local function UpdateESP(plr)
-    if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("Head") then
-        if ToolsESP_Objects[plr] then
-            ToolsESP_Objects[plr]:Destroy()
-            ToolsESP_Objects[plr] = nil
-        end
-        return
-    end
-
-    local bill = ToolsESP_Objects[plr]
-    if not bill or not bill.Parent then
-        bill = Instance.new("BillboardGui")
-        bill.Name = "ToolsESP"
-        bill.Adornee = plr.Character.Head
-        bill.Size = UDim2.new(0,500,0,70)
-        bill.StudsOffset = Vector3.new(0,7.5,0)
-        bill.AlwaysOnTop = true
-        bill.Parent = plr.Character.Head
-
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,1,0)
-        label.BackgroundTransparency = 1
-        label.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
-        label.TextStrokeTransparency = 0
-        label.TextStrokeColor3 = Color3.new(0,0,0)
-        label.TextSize = CurrentToolsTextSize
-        label.TextXAlignment = "Center"
-        label.Parent = bill
-
-        ToolsESP_Objects[plr] = bill
-        bill.Label = label
-    end
-
-    local label = bill:FindFirstChild("TextLabel") or bill.Label
-    local allTools = {}
-    local hasDrum = false
-
-    for _, cont in pairs({plr.Character, plr:FindFirstChild("Backpack")}) do
-        if cont then
-            for _, tool in pairs(cont:GetChildren()) do
-                if tool:IsA("Tool") then
-                    local n, c, p = GetToolInfo(tool.Name)  -- ← LÍNEA CORREGIDA (AHORA SÍ TOMA EL COLOR NARANJA)
-                    if n then
-                        table.insert(allTools, {name = n, color = c, prio = p})
-                        if p == 1 then hasDrum = true end
-                    end
-                end
-            end
-        end
-    end
-
-    BreathingActive = hasDrum
-
-    if #allTools > 0 then
-        table.sort(allTools, function(a,b) return a.prio < b.prio end)
-        local show = {}
-        for i = 1, math.min(5, #allTools) do
-            table.insert(show, allTools[i].name)
-        end
-        local txt = table.concat(show, ", ")
-        if #allTools > 5 then txt = txt .. ", Máx..." end
-
-        label.Text = txt
-        label.TextColor3 = allTools[1].color  -- ← Ahora sí aplica naranja si es heavy, rojo si es drum
-        label.TextSize = CurrentToolsTextSize
-        bill.Enabled = true
-    else
-        bill.Enabled = false
-        BreathingActive = false
-    end
-end
-
--- TOGGLE PRINCIPAL
-sector15:AddToggle("ESP Guns", false, function(state)
-    ToolsESP_Enabled = state
-    if state then
-        for _, p in Players:GetPlayers() do
-            if p ~= LocalPlayer then UpdateESP(p) end
-        end
-    else
-        BreathingActive = false
-        for _, obj in pairs(ToolsESP_Objects) do
-            if obj and obj.Parent then obj:Destroy() end
-        end
-        ToolsESP_Objects = {}
-    end
-end)
-
--- SLIDER TAMAÑO
-sector15:AddSlider("Size Tools", 15, CurrentToolsTextSize, 30, 1, function(v)
-    CurrentToolsTextSize = v
-    for _, bill in pairs(ToolsESP_Objects) do
-        if bill and bill.Label then
-            bill.Label.TextSize = v
-        end
-    end
-end)
-
--- BUCLE PRINCIPAL
-RunService.Heartbeat:Connect(function()
-    if not ToolsESP_Enabled then return end
-    for _, plr in Players:GetPlayers() do
-        if plr ~= LocalPlayer then
-            UpdateESP(plr)
-        end
-    end
-end)
-
--- EVENTOS DE RESPAWN Y NUEVOS JUGADORES
-Players.PlayerAdded:Connect(function(plr)
-    plr.CharacterAdded:Connect(function()
-        task.wait(2.5)
-        if ToolsESP_Enabled then UpdateESP(plr) end
-    end)
-end)
-
-for _, plr in Players:GetPlayers() do
-    if plr ~= LocalPlayer then
-        if plr.Character then
-            task.delay(2, function()
-                if ToolsESP_Enabled then UpdateESP(plr) end
-            end)
-        end
-        plr.CharacterAdded:Connect(function()
-            task.wait(2.5)
-            if ToolsESP_Enabled then UpdateESP(plr) end
-        end)
-    end
-end
 
 -- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIXEADO 100% - SIN ELIMINAR NADA) ====================
 local ESP_Enabled = false
@@ -774,6 +579,183 @@ sector15:AddColorpicker("Box Color", ESPBox_Color, function(c)
     ESPBox_Color = c
 end)
 
+
+
+
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- 1. ESP HEALTH % - INDEPENDIENTE Y SIN LAG (solo su RenderStepped)
+-- ═══════════════════════════════════════════════════════════════════════════════════
+
+local Players     = game:GetService("Players")
+local RunService  = game:GetService("RunService")
+local Camera      = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local HealthEnabled = false
+local HealthTable   = {}
+
+local function CreateHealth(plr)
+    if plr == LocalPlayer or HealthTable[plr] then return end
+    local h = Drawing.new("Text")
+    h.Size = 16; h.Color = Color3.new(1,1,1); h.Center = true; h.Outline = true; h.Font = 2; h.Visible = false
+    HealthTable[plr] = h
+end
+
+for _, p in Players:GetPlayers() do CreateHealth(p) end
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function() task.wait(0.9) CreateHealth(p) end)
+end)
+Players.PlayerRemoving:Connect(function(p)
+    if HealthTable[p] then HealthTable[p]:Remove() HealthTable[p] = nil end
+end)
+
+-- RenderStepped EXCLUSIVO para Health (súper ligero)
+RunService.RenderStepped:Connect(function()
+    if not HealthEnabled then
+        for _, h in pairs(HealthTable) do h.Visible = false end
+        return
+    end
+    
+    for plr, h in pairs(HealthTable) do
+        if not plr.Parent then continue end
+        local char = plr.Character
+        if not char or not char:FindFirstChild("Humanoid") or not char:FindFirstChild("Head") or char.Humanoid.Health <= 0 then
+            h.Visible = false
+            continue
+        end
+        
+        local headPos = Camera:WorldToViewportPoint(char.Head.Position + Vector3.new(0, 0.5, 0))
+        if headPos.Z > 0 then
+            h.Text = "["..math.floor(char.Humanoid.Health/char.Humanoid.MaxHealth*100).."%]"
+            h.Position = Vector2.new(headPos.X, headPos.Y - 50)
+            h.Visible = true
+        else
+            h.Visible = false
+        end
+    end
+end)
+
+sector16:AddToggle("ESP Health %", false, function(v) HealthEnabled = v end)
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- 2. ESP DISTANCE - INDEPENDIENTE Y SIN LAG (solo su RenderStepped)
+-- ═══════════════════════════════════════════════════════════════════════════════════
+
+local DistEnabled = false
+local DistTable   = {}
+
+local function CreateDist(plr)
+    if plr == LocalPlayer or DistTable[plr] then return end
+    local d = Drawing.new("Text")
+    d.Size = 16; d.Color = Color3.new(1,1,1); d.Center = true; d.Outline = true; d.Font = 2; d.Visible = false
+    DistTable[plr] = d
+end
+
+for _, p in Players:GetPlayers() do CreateDist(p) end
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function() task.wait(0.9) CreateDist(p) end)
+end)
+Players.PlayerRemoving:Connect(function(p)
+    if DistTable[p] then DistTable[p]:Remove() DistTable[p] = nil end
+end)
+
+-- RenderStepped EXCLUSIVO para Distance (súper ligero)
+RunService.RenderStepped:Connect(function()
+    if not DistEnabled then
+        for _, d in pairs(DistTable) do d.Visible = false end
+        return
+    end
+    
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    
+    for plr, d in pairs(DistTable) do
+        if not plr.Parent then continue end
+        local char = plr.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            d.Visible = false
+            continue
+        end
+        
+        local rootPos = Camera:WorldToViewportPoint(char.HumanoidRootPart.Position)
+        if rootPos.Z > 0 then
+            local dist = math.floor((myRoot.Position - char.HumanoidRootPart.Position).Magnitude)
+            d.Text = "["..dist.."m]"
+            d.Position = Vector2.new(rootPos.X, rootPos.Y + 10)
+            d.Visible = true
+        else
+            d.Visible = false
+        end
+    end
+end)
+
+sector16:AddToggle("ESP Distance", false, function(v) DistEnabled = v end)
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- 3. ESP TRACER - INDEPENDIENTE Y SIN LAG (solo su RenderStepped + ColorPicker)
+-- ═══════════════════════════════════════════════════════════════════════════════════
+
+local TracerEnabled = false
+local TracerColor   = Color3.fromRGB(255, 255, 255)
+local TracerTable   = {}
+
+local function CreateTracer(plr)
+    if plr == LocalPlayer or TracerTable[plr] then return end
+    local t = Drawing.new("Line")
+    t.Thickness = 2; t.Color = TracerColor; t.Transparency = 1; t.Visible = false
+    TracerTable[plr] = t
+end
+
+for _, p in Players:GetPlayers() do CreateTracer(p) end
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function() task.wait(0.9) CreateTracer(p) end)
+end)
+Players.PlayerRemoving:Connect(function(p)
+    if TracerTable[p] then TracerTable[p]:Remove() TracerTable[p] = nil end
+end)
+
+-- RenderStepped EXCLUSIVO para Tracer (el más ligero)
+RunService.RenderStepped:Connect(function()
+    if not TracerEnabled then
+        for _, t in pairs(TracerTable) do t.Visible = false end
+        return
+    end
+    
+    local cx = Camera.ViewportSize.X / 2
+    local by = Camera.ViewportSize.Y
+    
+    for plr, t in pairs(TracerTable) do
+        if not plr.Parent then continue end
+        local char = plr.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            t.Visible = false
+            continue
+        end
+        
+        local rootPos = Camera:WorldToViewportPoint(char.HumanoidRootPart.Position)
+        if rootPos.Z > 0 then
+            t.Color = TracerColor
+            t.From = Vector2.new(cx, by)
+            t.To = Vector2.new(rootPos.X, rootPos.Y)
+            t.Visible = true
+        else
+            t.Visible = false
+        end
+    end
+end)
+
+sector16:AddToggle("ESP Tracer", false, function(v) TracerEnabled = v end)
+sector16:AddColorpicker("Tracer Color", TracerColor, function(c)
+    TracerColor = c
+end)
+
+
+
+
+
+
 -- === SOLO EL TOGGLE (SIN SLIDER NI BOTÓN DE TEST) ===
 sector20:AddToggle("Auto Marshmallow", false, function(state)
     getgenv().AutoMarshEnabled = state
@@ -803,7 +785,7 @@ end
 -- Aplicar Low Graphics + Quitar texturas
 local function ApplyLowGraphics()
     -- Bajamos los gráficos a nivel 2
-    settings().Rendering.QualityLevel = 2
+    settings().Rendering.QualityLevel = 1
     
     -- Quitamos TODAS las texturas del mapa (menos tu personaje)
     for _, obj in ipairs(workspace:GetDescendants()) do
@@ -835,7 +817,7 @@ end
 
 -- Restaurar todo al estado original
 local function RestoreGraphics()
-    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 10
+    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 1001
     
     -- Reactivamos partículas
     for _, obj in ipairs(workspace:GetDescendants()) do
@@ -1040,4 +1022,153 @@ TweenService:Create(HUD, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingD
     Position = UDim2.new(0.5, -120, 0, 10)
 }):Play()
 
-print("LTS WaterFall HUD ROJO MINI → 100% FUNCIONAL - Todos los bugs corregidos")
+-- ==================== ESP TOOLS SIN FONDO + ROJO SI ARMA PELIGROSA (SLIDER FUNCIONA PERFECTO) ====================
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
+local TextService       = game:GetService("TextService")
+local LocalPlayer       = Players.LocalPlayer
+
+-- CONFIGURACIÓN
+local TEXT_SIZE       = 20        -- valor inicial (el slider lo cambia)
+local MAX_WIDTH       = 380
+
+local ToolsESP_Enabled = false
+local espDrawings = {}  -- [player] = {text = Drawing}
+
+-- TOOLS OCULTOS
+local HIDDEN_TOOLS = {
+    "empty bag", "potato", "ghost skull face half mask", "black surgical mask", "black surgical", "skimask",
+    "flour", "card", "gelatin", "lockpick", "sugar block bag", "crowbar", "water", "fake id", "fist", "phone",
+    "standard clip", "speed loader", "extended clip", "heavy magazine", "drum magazine", "lockpick", "crate"
+}
+
+-- ARMAS PELIGROSAS → ROJO
+local SPECIAL_TOOLS = {
+    "prl-16", "arp9", "mpx", "honey badger pistol", "ddm4 v7 pistol", "ar pistol",
+    "draco", "tec-9", "mcx", ".308 ar-10", "honey badger", "m&p-15 sport ii",
+    "300 blackout", "micro draco", "micro arp", "ak draco", "suppressed mcx",
+    "suppressed arp", "whiteout ar9", "fn57", "g19xext", "machete", "springfieldxd mod",
+    ".308 ar-10 drum", "honey badger drum", "m&p-15 sport ii drum",
+    "micro draco drum", "300 blackout drum", "micro arp drum", "ak draco drum",
+    "tan 300 blk mcx", "springfieldxd drum", "mcx drum", "g19xdrum", "tec-9 drum",
+    "fn57drum", "arp drum", "taurus drum", "five seven drum", "five-seven drum",
+    "plr-16 drum", "g23 drum", "vp9 drum", "p80 drum", "glocks drum", "draco drum",
+    "glock 20 drum", "hi-point drum", "g22drum"
+}
+
+local hidden  = {}
+for _, v in ipairs(HIDDEN_TOOLS)  do hidden[string.lower(v)]  = true end
+local special = {}
+for _, v in ipairs(SPECIAL_TOOLS) do special[string.lower(v)] = true end
+
+local function createESP(plr)
+    if plr == LocalPlayer or espDrawings[plr] then return end
+    local txt = Drawing.new("Text")
+    txt.Size = TEXT_SIZE
+    txt.Center = true
+    txt.Outline = true
+    txt.OutlineColor = Color3.fromRGB(0,0,0)
+    txt.Font = 2
+    txt.Visible = false
+    espDrawings[plr] = {text = txt}
+end
+
+local function getToolsText(plr)
+    local tools = {}
+
+    if plr.Character then
+        local eq = plr.Character:FindFirstChildOfClass("Tool")
+        if eq and not hidden[string.lower(eq.Name)] then table.insert(tools, eq.Name) end
+    end
+
+    local bp = plr:FindFirstChild("Backpack")
+    if bp then
+        for _, t in ipairs(bp:GetChildren()) do
+            if t:IsA("Tool") and not hidden[string.lower(t.Name)] then
+                table.insert(tools, t.Name)
+            end
+        end
+    end
+
+    if #tools == 0 then return nil end
+
+    local hasSpecial = false
+    for _, name in ipairs(tools) do
+        if special[string.lower(name)] then hasSpecial = true break end
+    end
+
+    local color = hasSpecial and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(230,230,230)
+
+    if #tools <= 5 then
+        return table.concat(tools, ", "), color
+    else
+        local short = {}
+        for i=1,4 do table.insert(short, tools[i]) end
+        table.insert(short, tools[5].." | +"..(#tools-4).." Más")
+        return table.concat(short, ", "), color
+    end
+end
+
+-- LOOP PRINCIPAL
+RunService.Heartbeat:Connect(function()
+    if not ToolsESP_Enabled then
+        for _, obj in pairs(espDrawings) do
+            if obj.text then obj.text.Visible = false end
+        end
+        return
+    end
+
+    for plr, obj in pairs(espDrawings) do
+        local line, color = getToolsText(plr)
+        if not line or not plr.Character or not plr.Character:FindFirstChild("Head") then
+            obj.text.Visible = false
+            continue
+        end
+
+        local headPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0,3.6,0))
+        if not onScreen then
+            obj.text.Visible = false
+            continue
+        end
+
+        local size = TEXT_SIZE
+        local bounds = TextService:GetTextSize(line, size, Enum.Font.GothamBold, Vector2.new(99999,50))
+        while bounds.X > MAX_WIDTH and size > 11 do
+            size = size - 0.5
+            bounds = TextService:GetTextSize(line, size, Enum.Font.GothamBold, Vector2.new(99999,50))
+        end
+
+        obj.text.Size = size
+        obj.text.Text = line
+        obj.text.Color = color
+        obj.text.Position = Vector2.new(headPos.X, headPos.Y)
+        obj.text.Visible = true
+    end
+end)
+
+-- LIMPIEZA
+Players.PlayerRemoving:Connect(function(plr)
+    if espDrawings[plr] then
+        espDrawings[plr].text:Remove()
+        espDrawings[plr] = nil
+    end
+end)
+
+local function setupPlayer(plr)
+    if plr == LocalPlayer then return end
+    createESP(plr)
+end
+
+for _, p in Players:GetPlayers() do setupPlayer(p) end
+Players.PlayerAdded:Connect(setupPlayer)
+
+-- TOGGLE
+sector15:AddToggle("ESP Guns", false, function(state)
+    ToolsESP_Enabled = state
+    if not state then
+        for _, obj in pairs(espDrawings) do
+            if obj.text then obj.text.Visible = false end
+        end
+    end
+end)
+
