@@ -13,12 +13,12 @@ local sector21 = tab3:CreateSector("Character", "right")
 getgenv().OldAimPart = "HumanoidRootPart"
 getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
 getgenv().AimlockKey = "b"
-getgenv().AimRadius = 20 -- How far away from someones character you want to lock on at
+getgenv().AimRadius = 50 -- How far away from someones character you want to lock on at
 getgenv().ThirdPerson = true
 getgenv().FirstPerson = true
 getgenv().TeamCheck = false -- Check if Target is on your Team (True means it wont lock onto your teamates, false is vice versa) (Set it to false if there are no teams)
 getgenv().PredictMovement = true -- Predicts if they are moving in fast velocity (like jumping) so the aimbot will go a bit faster to match their speed
-getgenv().PredictionVelocity = 14
+getgenv().PredictionVelocity = 16
 getgenv().CheckIfJumped = false
 getgenv().AutoPrediction = false
 getgenv().Smoothness = 0 -- ← NUEVA VARIABLE (0 = sin smooth, cuanto más alto más suave)
@@ -817,7 +817,7 @@ end
 
 -- Restaurar todo al estado original
 local function RestoreGraphics()
-    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 1001
+    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 1
     
     -- Reactivamos partículas
     for _, obj in ipairs(workspace:GetDescendants()) do
