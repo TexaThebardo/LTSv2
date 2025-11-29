@@ -1,8 +1,8 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: v3.5 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
-local tab1 = win:CreateTab("Combat")
-local tab2 = win:CreateTab("Visual")
-local tab3 = win:CreateTab("Player") -- NUEVO TAB 3
+local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: v3.7 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
+local tab1 = win:CreateTab("⚔️ Combat")
+local tab2 = win:CreateTab("👁️ Visual")
+local tab3 = win:CreateTab("🎮 Player") -- NUEVO TAB 3
 local sector1 = tab1:CreateSector("Camlock Category","left")
 local sector10 = tab1:CreateSector("Fov Category","right")
 local sector15 = tab2:CreateSector("ESP Category","left")
@@ -415,6 +415,10 @@ sector15:AddButton("Clean Friends", function()
     UpdateESP()
 end)
 
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- 1. AUTO FARRMEO MARSHMELLOW - SOLO SE ACTIVA CUANDO EL TOGGLE ESTÁ ON
+-- ═══════════════════════════════════════════════════════════════════════════════════
 getgenv().AutoMarshEnabled = false
 getgenv().MarshInterval = 1.42  -- Velocidad fija y segura (380-420 marshmallows/hora)
 
@@ -484,7 +488,24 @@ local function startLoop()
     end)
 end
 
--- ==================== ESP BOX 2D FINAL - AHORA EN TAB VISUAL (SECTOR15) ====================
+-- === SOLO EL TOGGLE (SIN SLIDER NI BOTÓN DE TEST) ===
+sector20:AddToggle("Auto Marshmallow", false, function(state)
+    getgenv().AutoMarshEnabled = state
+    if state then
+        currentIndex = 1
+        print("AUTO MARSHMALLOW BYPASS ACTIVADO - FARM SIN BAN")
+        startLoop()
+    else
+        print("Auto Marshmallow OFF")
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid:UnequipTools()
+        end
+    end
+end)
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- 1. ESP BOX - SOLO SE ACTIVA CUANDO EL TOGGLE ESTÁ ON
+-- ═══════════════════════════════════════════════════════════════════════════════════
 local ESPBox_Enabled = false
 local ESPBox_Thickness = 0.8
 local ESPBox_Color = Color3.fromRGB(255, 255, 255)
@@ -578,14 +599,8 @@ end)
 sector15:AddColorpicker("Box Color", ESPBox_Color, function(c)
     ESPBox_Color = c
 end)
-
-
-
-
-
-
 -- ═══════════════════════════════════════════════════════════════════════════════════
--- 1. ESP HEALTH % - INDEPENDIENTE Y SIN LAG (solo su RenderStepped)
+-- 1. ESP HEALTH % - SOLO SE ACTIVA CUANDO EL TOGGLE ESTÁ ON
 -- ═══════════════════════════════════════════════════════════════════════════════════
 
 local Players     = game:GetService("Players")
@@ -595,29 +610,9 @@ local LocalPlayer = Players.LocalPlayer
 
 local HealthEnabled = false
 local HealthTable   = {}
+local HealthConnection -- Variable para guardar la conexión
 
-local function CreateHealth(plr)
-    if plr == LocalPlayer or HealthTable[plr] then return end
-    local h = Drawing.new("Text")
-    h.Size = 16; h.Color = Color3.new(1,1,1); h.Center = true; h.Outline = true; h.Font = 2; h.Visible = false
-    HealthTable[plr] = h
-end
-
-for _, p in Players:GetPlayers() do CreateHealth(p) end
-Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function() task.wait(0.9) CreateHealth(p) end)
-end)
-Players.PlayerRemoving:Connect(function(p)
-    if HealthTable[p] then HealthTable[p]:Remove() HealthTable[p] = nil end
-end)
-
--- RenderStepped EXCLUSIVO para Health (súper ligero)
-RunService.RenderStepped:Connect(function()
-    if not HealthEnabled then
-        for _, h in pairs(HealthTable) do h.Visible = false end
-        return
-    end
-    
+local function UpdateHealthESP()
     for plr, h in pairs(HealthTable) do
         if not plr.Parent then continue end
         local char = plr.Character
@@ -635,41 +630,58 @@ RunService.RenderStepped:Connect(function()
             h.Visible = false
         end
     end
+end
+
+local function CreateHealth(plr)
+    if plr == LocalPlayer or HealthTable[plr] then return end
+    local h = Drawing.new("Text")
+    h.Size = 16; h.Color = Color3.new(1,1,1); h.Center = true; h.Outline = true; h.Font = 2; h.Visible = false
+    HealthTable[plr] = h
+end
+
+-- Crear para jugadores existentes
+for _, p in Players:GetPlayers() do CreateHealth(p) end
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function() task.wait(0.9) CreateHealth(p) end)
+end)
+Players.PlayerRemoving:Connect(function(p)
+    if HealthTable[p] then HealthTable[p]:Remove() HealthTable[p] = nil end
 end)
 
-sector16:AddToggle("ESP Health %", false, function(v) HealthEnabled = v end)
+-- Toggle que controla la conexión completa
+sector16:AddToggle("ESP Health %", false, function(state)
+    HealthEnabled = state
+    
+    if state then
+        -- Solo conectamos RenderStepped cuando se activa
+        if not HealthConnection then
+            HealthConnection = RunService.RenderStepped:Connect(UpdateHealthESP)
+        end
+    else
+        -- Desconectamos completamente cuando está off
+        if HealthConnection then
+            HealthConnection:Disconnect()
+            HealthConnection = nil
+        end
+        -- Ocultamos todo al desactivar
+        for _, h in pairs(HealthTable) do h.Visible = false end
+    end
+end)
 
 -- ═══════════════════════════════════════════════════════════════════════════════════
--- 2. ESP DISTANCE - INDEPENDIENTE Y SIN LAG (solo su RenderStepped)
+-- 2. ESP DISTANCE - TAMBIÉN TOTALMENTE DESACTIVADO HASTA EL TOGGLE
 -- ═══════════════════════════════════════════════════════════════════════════════════
 
 local DistEnabled = false
 local DistTable   = {}
+local DistConnection
 
-local function CreateDist(plr)
-    if plr == LocalPlayer or DistTable[plr] then return end
-    local d = Drawing.new("Text")
-    d.Size = 16; d.Color = Color3.new(1,1,1); d.Center = true; d.Outline = true; d.Font = 2; d.Visible = false
-    DistTable[plr] = d
-end
-
-for _, p in Players:GetPlayers() do CreateDist(p) end
-Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function() task.wait(0.9) CreateDist(p) end)
-end)
-Players.PlayerRemoving:Connect(function(p)
-    if DistTable[p] then DistTable[p]:Remove() DistTable[p] = nil end
-end)
-
--- RenderStepped EXCLUSIVO para Distance (súper ligero)
-RunService.RenderStepped:Connect(function()
-    if not DistEnabled then
-        for _, d in pairs(DistTable) do d.Visible = false end
-        return
-    end
-    
+local function UpdateDistESP()
     local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
+    if not myRoot then 
+        for _, d in pairs(DistTable) do d.Visible = false end
+        return 
+    end
     
     for plr, d in pairs(DistTable) do
         if not plr.Parent then continue end
@@ -689,138 +701,133 @@ RunService.RenderStepped:Connect(function()
             d.Visible = false
         end
     end
-end)
-
-sector16:AddToggle("ESP Distance", false, function(v) DistEnabled = v end)
-
--- ═══════════════════════════════════════════════════════════════════════════════════
--- 3. ESP TRACER - INDEPENDIENTE Y SIN LAG (solo su RenderStepped + ColorPicker)
--- ═══════════════════════════════════════════════════════════════════════════════════
-
-local TracerEnabled = false
-local TracerColor   = Color3.fromRGB(255, 255, 255)
-local TracerTable   = {}
-
-local function CreateTracer(plr)
-    if plr == LocalPlayer or TracerTable[plr] then return end
-    local t = Drawing.new("Line")
-    t.Thickness = 2; t.Color = TracerColor; t.Transparency = 1; t.Visible = false
-    TracerTable[plr] = t
 end
 
-for _, p in Players:GetPlayers() do CreateTracer(p) end
+local function CreateDist(plr)
+    if plr == LocalPlayer or DistTable[plr] then return end
+    local d = Drawing.new("Text")
+    d.Size = 16; d.Color = Color3.new(1,1,1); d.Center = true; d.Outline = true; d.Font = 2; d.Visible = false
+    DistTable[plr] = d
+end
+
+for _, p in Players:GetPlayers() do CreateDist(p) end
 Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function() task.wait(0.9) CreateTracer(p) end)
+    p.CharacterAdded:Connect(function() task.wait(0.9) CreateDist(p) end)
 end)
 Players.PlayerRemoving:Connect(function(p)
-    if TracerTable[p] then TracerTable[p]:Remove() TracerTable[p] = nil end
+    if DistTable[p] then DistTable[p]:Remove() DistTable[p] = nil end
 end)
 
--- RenderStepped EXCLUSIVO para Tracer (el más ligero)
-RunService.RenderStepped:Connect(function()
-    if not TracerEnabled then
-        for _, t in pairs(TracerTable) do t.Visible = false end
-        return
-    end
+sector16:AddToggle("ESP Distance", false, function(state)
+    DistEnabled = state
     
-    local cx = Camera.ViewportSize.X / 2
-    local by = Camera.ViewportSize.Y
-    
-    for plr, t in pairs(TracerTable) do
-        if not plr.Parent then continue end
-        local char = plr.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then
-            t.Visible = false
-            continue
-        end
-        
-        local rootPos = Camera:WorldToViewportPoint(char.HumanoidRootPart.Position)
-        if rootPos.Z > 0 then
-            t.Color = TracerColor
-            t.From = Vector2.new(cx, by)
-            t.To = Vector2.new(rootPos.X, rootPos.Y)
-            t.Visible = true
-        else
-            t.Visible = false
-        end
-    end
-end)
-
-sector16:AddToggle("ESP Tracer", false, function(v) TracerEnabled = v end)
-sector16:AddColorpicker("Tracer Color", TracerColor, function(c)
-    TracerColor = c
-end)
-
-
-
-
-
-
--- === SOLO EL TOGGLE (SIN SLIDER NI BOTÓN DE TEST) ===
-sector20:AddToggle("Auto Marshmallow", false, function(state)
-    getgenv().AutoMarshEnabled = state
     if state then
-        currentIndex = 1
-        print("AUTO MARSHMALLOW BYPASS ACTIVADO - FARM SIN BAN")
-        startLoop()
-    else
-        print("Auto Marshmallow OFF")
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid:UnequipTools()
+        if not DistConnection then
+            DistConnection = RunService.RenderStepped:Connect(UpdateDistESP)
         end
+    else
+        if DistConnection then
+            DistConnection:Disconnect()
+            DistConnection = nil
+        end
+        for _, d in pairs(DistTable) do d.Visible = false end
     end
 end)
 
--- TAB3 → SECTOR21  |  LOW GRAPHICS + QUITAR TEXTURAS
-local LowGraphics_Enabled = false
-local OriginalSettings = {}
 
--- Guardamos los settings originales para poder restaurarlos
-local function SaveOriginal()
-    if OriginalSettings.Saved then return end
-    OriginalSettings.QualityLevel = settings().Rendering.QualityLevel
-    OriginalSettings.Saved = true
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- LOW GRAPHICS + AUTO-DELETE TREE MODELS (sin lag cuando está apagado)
+-- ═══════════════════════════════════════════════════════════════════════════════════
+
+local Players     = game:GetService("Players")
+local Workspace   = game:GetService("Workspace")
+local Settings    = settings()
+
+local LocalPlayer = Players.LocalPlayer
+
+local LowGraphics_Enabled = false
+local OriginalQuality = nil
+local DescendantConnection = nil
+
+-- Guardar calidad original (solo una vez)
+local function SaveOriginalQuality()
+    if OriginalQuality then return end
+    OriginalQuality = Settings.Rendering.QualityLevel
 end
 
--- Aplicar Low Graphics + Quitar texturas
-local function ApplyLowGraphics()
-    -- Bajamos los gráficos a nivel 2
-    settings().Rendering.QualityLevel = 1
-    
-    -- Quitamos TODAS las texturas del mapa (menos tu personaje)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj ~= LocalPlayer.Character and obj:IsA("BasePart") then
-            if obj.Material ~= Enum.Material.Plastic and obj.Material ~= Enum.Material.SmoothPlastic then
-                obj.Material = Enum.Material.SmoothPlastic
-            end
-            obj.Transparency = obj.Transparency > 0.9 and obj.Transparency or 0
+-- Función para aplicar low graphics a un objeto individual
+local function ApplyLowToObject(obj)
+    if not LowGraphics_Enabled then return end
+
+    task.spawn(function()
+        task.wait() -- aseguramos que el objeto esté listo
+
+        -- ELIMINAR ÁRBOLES (Tree, tree, Palm, etc.)
+        if obj:IsA("Model") and string.find(string.lower(obj.Name), "tree") then
+            obj:Destroy()
+            return
+        end
+
+        -- BaseParts
+        if obj:IsA("BasePart") and (not obj.Parent or obj.Parent.Parent ~= LocalPlayer.Character) then
+            obj.Material = Enum.Material.SmoothPlastic
+            if obj.Transparency < 0.9 then obj.Transparency = 0 end
             if obj:FindFirstChildOfClass("Decal") then obj:FindFirstChildOfClass("Decal").Transparency = 1 end
             if obj:FindFirstChildOfClass("Texture") then obj:FindFirstChildOfClass("Texture").Transparency = 1 end
         end
-        
-        if obj:IsA("Decal") or obj:IsA("Texture") then
-            if not obj.Parent or not obj.Parent.Parent or obj.Parent.Parent ~= LocalPlayer.Character then
-                obj.Transparency = 1
-            end
+
+        -- Decals & Textures
+        if (obj:IsA("Decal") or obj:IsA("Texture")) and (not obj.Parent or obj.Parent.Parent ~= LocalPlayer.Character) then
+            obj.Transparency = 1
         end
-        
+
+        -- Partículas y efectos
         if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
             obj.Enabled = false
         end
-        
-        if obj:IsA("MeshPart") and obj ~= LocalPlayer.Character then
+
+        -- MeshParts sin textura
+        if obj:IsA("MeshPart") and (not obj.Parent or obj.Parent.Parent ~= LocalPlayer.Character) then
             obj.TextureID = ""
-            obj.Material = Enum.Material.SmoothPlastic
         end
+    end)
+end
+
+-- Activar Low Graphics completo
+local function EnableLowGraphics()
+    SaveOriginalQuality()
+    Settings.Rendering.QualityLevel = 1
+
+    -- Aplicar a todo lo que ya existe
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        ApplyLowToObject(obj)
+    end
+
+    -- Conectar evento único para nuevos objetos (incluye eliminación de árboles)
+    if not DescendantConnection then
+        DescendantConnection = Workspace.DescendantAdded:Connect(function(obj)
+            ApplyLowToObject(obj)
+        end)
     end
 end
 
--- Restaurar todo al estado original
-local function RestoreGraphics()
-    settings().Rendering.QualityLevel = OriginalSettings.QualityLevel or 1
-    
-    -- Reactivamos partículas
-    for _, obj in ipairs(workspace:GetDescendants()) do
+-- Desactivar todo perfectamente
+local function DisableLowGraphics()
+    LowGraphics_Enabled = false
+
+    -- Desconectar el evento (0 lag cuando está apagado)
+    if DescendantConnection then
+        DescendantConnection:Disconnect()
+        DescendantConnection = nil
+    end
+
+    -- Restaurar calidad gráfica
+    if OriginalQuality then
+        Settings.Rendering.QualityLevel = OriginalQuality
+    end
+
+    -- Reactivar partículas
+    for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
             obj.Enabled = true
         end
@@ -830,34 +837,20 @@ end
 -- TOGGLE PRINCIPAL
 sector21:AddToggle("Low Graphics", false, function(state)
     LowGraphics_Enabled = state
-    SaveOriginal()
-    
+
     if state then
-        ApplyLowGraphics()
-        -- Reaplicar cada vez que spawnea algo nuevo (opcional pero recomendado)
-        workspace.DescendantAdded:Connect(function(obj)
-            if LowGraphics_Enabled then
-                task.wait()
-                if obj:IsA("BasePart") and obj.Parent ~= LocalPlayer.Character then
-                    obj.Material = Enum.Material.SmoothPlastic
-                end
-                if (obj:IsA("Decal") or obj:IsA("Texture")) and (not obj.Parent or obj.Parent.Parent ~= LocalPlayer.Character) then
-                    obj.Transparency = 1
-                end
-            end
-        end)
+        EnableLowGraphics()
     else
-        RestoreGraphics()
+        DisableLowGraphics()
     end
 end)
 
--- BOTÓN EXTRA PARA FORZAR RESTAURAR (por si algo se buguea)
-sector21:AddButton("Restore Graphics", function()
+-- BOTÓN DE EMERGENCIA
+sector21:AddButton("Force Restore Graphics", function()
     LowGraphics_Enabled = false
-    RestoreGraphics()
-    print("Graphics restaurados al 100%")
+    DisableLowGraphics()
+    print("Graphics + árboles restaurados al 100%")
 end)
-
 
 -- ===================== LTS WATERFALL HUD ROJO MINI – 100% FUNCIONAL =====================
 
@@ -1172,3 +1165,182 @@ sector15:AddToggle("ESP Guns", false, function(state)
     end
 end)
 
+-- Anti AFK (evita kick por inactividad)
+sector21:AddToggle("Anti AFK", false, function(state)
+    if state then
+        game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+        end)
+        warn("Anti AFK Activado")
+    end
+end)
+
+-- ==================== FREECAM FINAL (SOLO FUNCIONA CON TOGGLE ON) ====================
+local FreecamEnabled = false        -- estado real del freecam
+local ToggleEnabled = false         -- estado del toggle (lo que el usuario ve)
+local FreecamSpeed = 50
+local MouseSens = 0.25
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local Player = game.Players.LocalPlayer
+
+local Yaw = 0
+local Pitch = 0
+local CamPos = Vector3.new()
+local Connection = nil
+
+-- TOGGLE PRINCIPAL (lo que el usuario ve y controla)
+local FreecamToggle = sector21:AddToggle("Freecam [F]", false, function(state)
+    ToggleEnabled = state
+
+    if state then
+        -- SOLO HABILITA el uso del Freecam, NO lo enciende automáticamente
+        print("Freecam habilitado - Presiona F para activarlo")
+    else
+        -- DESACTIVAR POR TOGGLE
+        FreecamEnabled = false
+        if Connection then Connection:Disconnect() Connection = nil end
+        UIS.MouseBehavior = Enum.MouseBehavior.Default
+        UIS.MouseIconEnabled = true
+        Camera.CameraType = Enum.CameraType.Custom
+    end
+end)
+
+-- TECLA F → SOLO FUNCIONA SI EL TOGGLE ESTÁ ACTIVADO
+UIS.InputBegan:Connect(function(inp, gp)
+    if gp or inp.KeyCode ~= Enum.KeyCode.F then return end
+
+    if not ToggleEnabled then 
+        -- Si el toggle está apagado → la tecla F no hace absolutamente nada
+        return 
+    end
+
+    FreecamEnabled = not FreecamEnabled
+
+    if FreecamEnabled then
+        -- ENCENDER FREECAM CON F
+        CamPos = Camera.CFrame.Position
+        local _, y = Camera.CFrame:ToEulerAnglesYXZ()
+        Yaw = math.deg(y)
+        Pitch = 0
+
+        Camera.CameraType = Enum.CameraType.Scriptable
+        UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+        UIS.MouseIconEnabled = false
+
+        if Connection then Connection:Disconnect() end
+        Connection = RunService.RenderStepped:Connect(function(dt)
+            if not FreecamEnabled or not ToggleEnabled then return end
+
+            -- Rotación ratón
+            local delta = UIS:GetMouseDelta()
+            Yaw   = Yaw   - delta.X * MouseSens
+            Pitch = math.clamp(Pitch - delta.Y * MouseSens, -89, 89)
+
+            local lookCF = CFrame.fromEulerAnglesYXZ(math.rad(Pitch), math.rad(Yaw), 0)
+            local forward = lookCF.LookVector
+            local right   = lookCF.RightVector
+
+            local move = Vector3.new()
+            if UIS:IsKeyDown(Enum.KeyCode.W) then move += forward end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then move -= forward end
+            if UIS:IsKeyDown(Enum.KeyCode.A) then move -= right end
+            if UIS:IsKeyDown(Enum.KeyCode.D) then move += right end
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
+
+            local speed = FreecamSpeed
+            if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then speed *= 4 end
+
+            if move.Magnitude > 0 then
+                CamPos += move.Unit * speed * dt
+            end
+
+            Camera.CFrame = CFrame.lookAt(CamPos, CamPos + forward)
+        end)
+
+    else
+        -- APAGAR FREECAM CON F
+        if Connection then Connection:Disconnect() Connection = nil end
+        UIS.MouseBehavior = Enum.MouseBehavior.Default
+        UIS.MouseIconEnabled = true
+        Camera.CameraType = Enum.CameraType.Custom
+    end
+end)
+
+-- SLIDERS
+sector21:AddSlider("Freecam Speed", 50, 20, 1000, 1, function(v) FreecamSpeed = v end)
+
+-- Infinite Yield Admin Commands (FE)
+sector21:AddButton("Infinite Yield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+-- FE Respawn Button (mata y respawnea instantáneo)
+sector21:AddButton("FE Respawn", function()
+    local lp = game.Players.LocalPlayer
+    if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+        lp.Character.Humanoid.Health = 0
+    end
+end)
+
+-- Enable Reset Button (activa el botón de reset aunque esté desactivado)
+sector21:AddButton("Enable Reset Button", function()
+    game:GetService("StarterGui"):SetCore("ResetButtonCallback", true)
+end)
+
+-- ==================== FULLBRIGHT FE REAL (COMO INFINITE YIELD - MÁXIMA CALIDAD) ====================
+local Lighting = game:GetService("Lighting")
+local OldLighting = {
+    Brightness = Lighting.Brightness,
+    GlobalShadows = Lighting.GlobalShadows,
+    FogEnd = Lighting.FogEnd,
+    FogStart = Lighting.FogStart,
+    ClockTime = Lighting.ClockTime,
+    Ambient = Lighting.Ambient,
+    OutdoorAmbient = Lighting.OutdoorAmbient
+}
+
+sector21:AddToggle("Fullbright", false, function(state)
+    if state then
+        Lighting.Brightness = 3
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 0
+        Lighting.ClockTime = 12
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+
+        -- Elimina todo tipo de oscuridad en tiempo real (FE)
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("BloomEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") or v:IsA("Atmosphere") then
+                v.Enabled = false
+            end
+        end
+
+        -- Reaplica cada vez que aparezca un efecto nuevo
+        Lighting.ChildAdded:Connect(function(child)
+            if state and (child:IsA("BloomEffect") or child:IsA("ColorCorrectionEffect") or child:IsA("SunRaysEffect") or child:IsA("Atmosphere")) then
+                child.Enabled = false
+            end
+        end)
+
+    else
+        -- Restaurar valores originales
+        Lighting.Brightness = OldLighting.Brightness
+        Lighting.GlobalShadows = OldLighting.GlobalShadows
+        Lighting.FogEnd = OldLighting.FogEnd
+        Lighting.FogStart = OldLighting.FogStart
+        Lighting.ClockTime = OldLighting.ClockTime
+        Lighting.Ambient = OldLighting.Ambient
+        Lighting.OutdoorAmbient = OldLighting.OutdoorAmbient
+
+        -- Reactivar efectos que estaban antes
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("BloomEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+                v.Enabled = true
+            end
+        end
+    end
+end)
