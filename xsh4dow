@@ -845,12 +845,6 @@ sector21:AddToggle("Low Graphics", false, function(state)
     end
 end)
 
--- BOTÓN DE EMERGENCIA
-sector21:AddButton("Force Restore Graphics", function()
-    LowGraphics_Enabled = false
-    DisableLowGraphics()
-    print("Graphics + árboles restaurados al 100%")
-end)
 
 -- ===================== LTS WATERFALL HUD ROJO MINI – 100% FUNCIONAL =====================
 
@@ -1166,7 +1160,7 @@ sector15:AddToggle("ESP Guns", false, function(state)
 end)
 
 -- Anti AFK (evita kick por inactividad)
-sector21:AddToggle("Anti AFK", false, function(state)
+sector21:AddToggle("Anti-AFK", false, function(state)
     if state then
         game:GetService("Players").LocalPlayer.Idled:Connect(function()
             game:GetService("VirtualUser"):ClickButton2(Vector2.new())
@@ -1174,103 +1168,6 @@ sector21:AddToggle("Anti AFK", false, function(state)
         warn("Anti AFK Activado")
     end
 end)
-
--- ==================== FREECAM FINAL (SOLO FUNCIONA CON TOGGLE ON) ====================
-local FreecamEnabled = false        -- estado real del freecam
-local ToggleEnabled = false         -- estado del toggle (lo que el usuario ve)
-local FreecamSpeed = 50
-local MouseSens = 0.25
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
-local Player = game.Players.LocalPlayer
-
-local Yaw = 0
-local Pitch = 0
-local CamPos = Vector3.new()
-local Connection = nil
-
--- TOGGLE PRINCIPAL (lo que el usuario ve y controla)
-local FreecamToggle = sector21:AddToggle("Freecam [F]", false, function(state)
-    ToggleEnabled = state
-
-    if state then
-        -- SOLO HABILITA el uso del Freecam, NO lo enciende automáticamente
-        print("Freecam habilitado - Presiona F para activarlo")
-    else
-        -- DESACTIVAR POR TOGGLE
-        FreecamEnabled = false
-        if Connection then Connection:Disconnect() Connection = nil end
-        UIS.MouseBehavior = Enum.MouseBehavior.Default
-        UIS.MouseIconEnabled = true
-        Camera.CameraType = Enum.CameraType.Custom
-    end
-end)
-
--- TECLA F → SOLO FUNCIONA SI EL TOGGLE ESTÁ ACTIVADO
-UIS.InputBegan:Connect(function(inp, gp)
-    if gp or inp.KeyCode ~= Enum.KeyCode.F then return end
-
-    if not ToggleEnabled then 
-        -- Si el toggle está apagado → la tecla F no hace absolutamente nada
-        return 
-    end
-
-    FreecamEnabled = not FreecamEnabled
-
-    if FreecamEnabled then
-        -- ENCENDER FREECAM CON F
-        CamPos = Camera.CFrame.Position
-        local _, y = Camera.CFrame:ToEulerAnglesYXZ()
-        Yaw = math.deg(y)
-        Pitch = 0
-
-        Camera.CameraType = Enum.CameraType.Scriptable
-        UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
-        UIS.MouseIconEnabled = false
-
-        if Connection then Connection:Disconnect() end
-        Connection = RunService.RenderStepped:Connect(function(dt)
-            if not FreecamEnabled or not ToggleEnabled then return end
-
-            -- Rotación ratón
-            local delta = UIS:GetMouseDelta()
-            Yaw   = Yaw   - delta.X * MouseSens
-            Pitch = math.clamp(Pitch - delta.Y * MouseSens, -89, 89)
-
-            local lookCF = CFrame.fromEulerAnglesYXZ(math.rad(Pitch), math.rad(Yaw), 0)
-            local forward = lookCF.LookVector
-            local right   = lookCF.RightVector
-
-            local move = Vector3.new()
-            if UIS:IsKeyDown(Enum.KeyCode.W) then move += forward end
-            if UIS:IsKeyDown(Enum.KeyCode.S) then move -= forward end
-            if UIS:IsKeyDown(Enum.KeyCode.A) then move -= right end
-            if UIS:IsKeyDown(Enum.KeyCode.D) then move += right end
-            if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
-            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
-
-            local speed = FreecamSpeed
-            if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then speed *= 4 end
-
-            if move.Magnitude > 0 then
-                CamPos += move.Unit * speed * dt
-            end
-
-            Camera.CFrame = CFrame.lookAt(CamPos, CamPos + forward)
-        end)
-
-    else
-        -- APAGAR FREECAM CON F
-        if Connection then Connection:Disconnect() Connection = nil end
-        UIS.MouseBehavior = Enum.MouseBehavior.Default
-        UIS.MouseIconEnabled = true
-        Camera.CameraType = Enum.CameraType.Custom
-    end
-end)
-
--- SLIDERS
-sector21:AddSlider("Freecam Speed", 50, 20, 1000, 1, function(v) FreecamSpeed = v end)
 
 -- Infinite Yield Admin Commands (FE)
 sector21:AddButton("Infinite Yield", function()
@@ -1286,7 +1183,7 @@ sector21:AddButton("FE Respawn", function()
 end)
 
 -- Enable Reset Button (activa el botón de reset aunque esté desactivado)
-sector21:AddButton("Enable Reset Button", function()
+sector21:AddButton("Enable Reset", function()
     game:GetService("StarterGui"):SetCore("ResetButtonCallback", true)
 end)
 
@@ -1343,4 +1240,117 @@ sector21:AddToggle("Fullbright", false, function(state)
             end
         end
     end
+end)
+
+-- ═══════════════════════════════════════════════════════════════════════════════════
+-- PLAYER ALARM (Bank Alarm) - AÑADIR EN EL TAB3 → sector20
+-- ═══════════════════════════════════════════════════════════════════════════════════
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+getgenv().PlayerAlarm_Enabled = false
+getgenv().PlayerAlarm_Radius = 15         -- Radio por defecto
+local SOUND_ID = "rbxassetid://7594301531"
+local REPEAT_INTERVAL = 5
+
+local activeAlarmSounds = {}  -- [player.UserId] = {sound = Sound, lastPlayed = tick()}
+
+local function createAlarmSound(parent)
+    local sound = Instance.new("Sound")
+    sound.SoundId = SOUND_ID
+    sound.Volume = 2
+    sound.Looped = false
+    sound.Parent = parent
+    return sound
+end
+
+local AlarmConnection
+local function startPlayerAlarm()
+    if AlarmConnection then return end
+    
+    AlarmConnection = RunService.Heartbeat:Connect(function()
+        if not getgenv().PlayerAlarm_Enabled then return end
+        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("Head") then return end
+        
+        local myHead = LocalPlayer.Character.Head
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                local distance = (myHead.Position - hrp.Position).Magnitude
+                local uid = player.UserId
+                
+                if distance <= getgenv().PlayerAlarm_Radius then
+                    -- Dentro del rango
+                    if not activeAlarmSounds[uid] then
+                        local targetHead = player.Character:FindFirstChild("Head") or hrp
+                        local sound = createAlarmSound(targetHead)
+                        activeAlarmSounds[uid] = {sound = sound, lastPlayed = 0}
+                        sound:Play()
+                        print("🚨 [BANK ALARM] Activado para " .. player.Name)
+                    end
+                    
+                    local data = activeAlarmSounds[uid]
+                    if tick() - data.lastPlayed >= REPEAT_INTERVAL then
+                        data.sound:Play()
+                        data.lastPlayed = tick()
+                    end
+                else
+                    -- Fuera del rango
+                    if activeAlarmSounds[uid] then
+                        activeAlarmSounds[uid].sound:Stop()
+                        activeAlarmSounds[uid].sound:Destroy()
+                        activeAlarmSounds[uid] = nil
+                    end
+                end
+            else
+                -- Jugador muerto o sin personaje
+                if activeAlarmSounds[player.UserId] then
+                    activeAlarmSounds[player.UserId].sound:Stop()
+                    activeAlarmSounds[player.UserId].sound:Destroy()
+                    activeAlarmSounds[player.UserId] = nil
+                end
+            end
+        end
+    end)
+end
+
+local function stopPlayerAlarm()
+    if AlarmConnection then
+        AlarmConnection:Disconnect()
+        AlarmConnection = nil
+    end
+    for _, data in pairs(activeAlarmSounds) do
+        if data.sound then
+            data.sound:Stop()
+            data.sound:Destroy()
+        end
+    end
+    activeAlarmSounds = {}
+end
+
+-- LIMPIAR AL SALIR UN JUGADOR
+Players.PlayerRemoving:Connect(function(plr)
+    if activeAlarmSounds[plr.UserId] then
+        activeAlarmSounds[plr.UserId].sound:Destroy()
+        activeAlarmSounds[plr.UserId] = nil
+    end
+end)
+
+-- TOGGLE + SLIDER (AÑADE ESTO EN TU sector20)
+sector20:AddToggle("Player Alarm", false, function(state)
+    getgenv().PlayerAlarm_Enabled = state
+    if state then
+        startPlayerAlarm()
+        print("🚨 Player Alarm ACTIVADO - Radio: " .. getgenv().PlayerAlarm_Radius .. " studs")
+    else
+        stopPlayerAlarm()
+        print("🚨 Player Alarm DESACTIVADO")
+    end
+end)
+
+sector20:AddSlider("Alarm Radius", 15, 1, 50, 1, function(value)
+    getgenv().PlayerAlarm_Radius = value
 end)
