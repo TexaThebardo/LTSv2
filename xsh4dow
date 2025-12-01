@@ -1,12 +1,12 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("[💢] SH4D        Version: v4.1 ¡Update! ", Vector2.new(500, 400), Enum.KeyCode.F1)
+local win = lib:CreateWindow("| F1 | SH4D SCRIPT         V4.1 ¡Update! ", Vector2.new(340, 450), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("⚔️ Combat")
 local tab2 = win:CreateTab("👁️ Visual")
 local tab3 = win:CreateTab("🎮 Player") -- NUEVO TAB 3
-local sector1 = tab1:CreateSector("Camlock Category","left")
-local sector10 = tab1:CreateSector("Fov Category","right")
-local sector15 = tab2:CreateSector("ESP Category","left")
-local sector16 = tab2:CreateSector("ESP V2 Category","right")
+local sector1 = tab1:CreateSector("Aimlock","left")
+local sector10 = tab1:CreateSector("Aimlock Fov","right")
+local sector15 = tab2:CreateSector("Esp Players","left")
+local sector16 = tab2:CreateSector("Esp Players V2","right")
 local sector20 = tab3:CreateSector("Auto Marshmallow", "left") -- Sector con número automático
 local sector21 = tab3:CreateSector("Character", "right")
 
@@ -181,14 +181,14 @@ L_15_.RenderStepped:Connect(function()
         end
     end
 end)
-sector1:AddToggle("Aimlock - (Key B)",false,function(L_122_arg0)
+sector1:AddToggle("Aimlock - [B]",false,function(L_122_arg0)
 L_24_ = L_122_arg0
-end)
-sector1:AddToggle("Team Check",false,function(L_126_arg0)
-getgenv().TeamCheck = L_126_arg0
 end)
 sector1:AddToggle("Alive Check", false, function(state)
     getgenv().AliveCheck = state
+end)
+sector1:AddToggle("Team Check",false,function(L_126_arg0)
+getgenv().TeamCheck = L_126_arg0
 end)
 sector1:AddToggle("Airshot Function",false,function(L_131_arg0)
 CheckIfJumped =  L_131_arg0
@@ -196,22 +196,22 @@ end)
 sector1:AddToggle("Auto Prediction",false,function(L_132_arg0)
 AutoPrediction = L_132_arg0
 end)
-sector1:AddTextbox("Aimlock Keybind",false,function(L_123_arg0)
+sector1:AddTextbox("Keybind",false,function(L_123_arg0)
 AimlockKey = L_123_arg0
 end)
-sector1:AddTextbox("Aimlock Prediction",false,function(L_124_arg0)
-PredictionVelocity = L_124_arg0
-end)
-sector1:AddTextbox("Aimlock Radius", "", function(value)
-    local num = tonumber(value)
-    if num and num >= 0 then
-        getgenv().AimRadius = num
-    end
-end)
-sector1:AddTextbox("Aim Smoothness", "", function(value)
+sector1:AddTextbox("Smoothness", "", function(value)
     local num = tonumber(value)
     if num then
         getgenv().Smoothness = math.clamp(num, 0, 1)
+    end
+end)
+sector1:AddTextbox("Prediction",false,function(L_124_arg0)
+PredictionVelocity = L_124_arg0
+end)
+sector1:AddTextbox("Radius", "", function(value)
+    local num = tonumber(value)
+    if num and num >= 0 then
+        getgenv().AimRadius = num
     end
 end)
 sector1:AddDropdown("Bodypart",{"Head","UpperTorso","HumanoidRootPart", "LowerTorso"},"HumanoidRootPart",false, function(L_125_arg0)
