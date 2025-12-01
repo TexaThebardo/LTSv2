@@ -1,5 +1,5 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: v3.7 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
+local win = lib:CreateWindow("(❗) LTS X SH4DOW        Version: v3.9 ¡Update! ", Vector2.new(370, 400), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("⚔️ Combat")
 local tab2 = win:CreateTab("👁️ Visual")
 local tab3 = win:CreateTab("🎮 Player") -- NUEVO TAB 3
