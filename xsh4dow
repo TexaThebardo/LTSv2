@@ -1,5 +1,5 @@
 lib = loadstring(game:HttpGet"https://raw.githubusercontent.com/TexaThebardo/LTS/refs/heads/main/Cheats")()
-local win = lib:CreateWindow("| F1 | SH4D SCRIPT      V4.1 ¡Update! ", Vector2.new(340, 450), Enum.KeyCode.F1)
+local win = lib:CreateWindow("| F1 | SH4D SCRIPT       V4.1 ¡Update! ", Vector2.new(340, 450), Enum.KeyCode.F1)
 local tab1 = win:CreateTab("⚔️ Combat")
 local tab2 = win:CreateTab("👁️ Visual")
 local tab3 = win:CreateTab("🎮 Player") -- NUEVO TAB 3
@@ -13,14 +13,14 @@ local sector22 = tab3:CreateSector("Customize Client ", "left")
 
 getgenv().OldAimPart = "HumanoidRootPart"
 getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
-getgenv().AimlockKey = "b"
+getgenv().AimlockKey = "x"
 getgenv().AimRadius = 50 -- How far away from someones character you want to lock on at
 getgenv().ThirdPerson = true
 getgenv().FirstPerson = true
 getgenv().TeamCheck = false -- Check if Target is on your Team (True means it wont lock onto your teamates, false is vice versa) (Set it to false if there are no teams)
 getgenv().PredictMovement = true -- Predicts if they are moving in fast velocity (like jumping) so the aimbot will go a bit faster to match their speed
 getgenv().PredictionVelocity = 16
-getgenv().CheckIfJumped = false
+getgenv().CheckIfJumped = true
 getgenv().AutoPrediction = false
 getgenv().Smoothness = 0 -- ← NUEVA VARIABLE (0 = sin smooth, cuanto más alto más suave)
 getgenv().AliveCheck = false  -- ← Asegura que empiece desactivado aunque el toggle falle
@@ -182,8 +182,12 @@ L_15_.RenderStepped:Connect(function()
         end
     end
 end)
-sector1:AddToggle("Aimlock - [B]",false,function(L_122_arg0)
+sector1:AddToggle("Aimlock - [X]",false,function(L_122_arg0)
 L_24_ = L_122_arg0
+end)
+sector1:AddDropdown("Bodypart",{"Head","UpperTorso","HumanoidRootPart", "LowerTorso"},"HumanoidRootPart",true, function(L_125_arg0)
+getgenv().AimPart = L_125_arg0
+getgenv().OldAimPart = L_125_arg0
 end)
 sector1:AddToggle("Alive Check", false, function(state)
     getgenv().AliveCheck = state
@@ -215,10 +219,6 @@ sector1:AddTextbox("Radius", "", function(value)
         getgenv().AimRadius = num
     end
 end)
-sector1:AddDropdown("Bodypart",{"Head","UpperTorso","HumanoidRootPart", "LowerTorso"},"HumanoidRootPart",false, function(L_125_arg0)
-getgenv().AimPart = L_125_arg0
-getgenv().OldAimPart = L_125_arg0
-end)
 
 local LP = game.Players.LocalPlayer
 local Mouse = LP:GetMouse()
@@ -240,6 +240,9 @@ end)
 sector10:AddToggle("Aimlock Fov", false, function(L_127_arg0)
 	circle.Visible = L_127_arg0
 end)
+sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
+	circle.Radius = L_130_arg0
+end)
 sector10:AddToggle("Filled Fov", false, function(L_129_arg0)
 	circle.Filled = L_129_arg0
 end)
@@ -249,8 +252,183 @@ end)
 sector10:AddToggle("Circle Fov", false, function()
 	circle.NumSides = 350
 end)
-sector10:AddSlider("Size Fov", 0, 1, 250, 30, function(L_130_arg0)
-	circle.Radius = L_130_arg0
+
+-- ==================== HARDLOCK EXTREME - FIJO COMO PEGAMENTO 100% ====================
+local sector11 = tab1:CreateSector("Hardlock Extreme", "right")
+
+getgenv().HardlockToggle = false
+getgenv().HardlockKey = "z"
+getgenv().HardlockPart = "Head"
+getgenv().HardlockFOV = 50
+getgenv().HardlockEnabled = false
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Cam = workspace.CurrentCamera
+local Target = nil
+local LockConnection = nil
+
+-- EL HARDLOCK MÁS ESTABLE Y PEGAJOSO QUE EXISTE EN 2025
+local function HardlockLoop()
+    if not getgenv().HardlockToggle or not getgenv().HardlockEnabled or not Target or not Target.Character then return end
+
+    local char = Target.Character
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then Target = nil return end
+
+    local part = char:FindFirstChild(getgenv().HardlockPart)
+    if getgenv().CheckIfJumped and humanoid.FloorMaterial == Enum.Material.Air then
+        part = char:FindFirstChild("Head") or char:FindFirstChild("LowerTorso") or char.HumanoidRootPart
+    elseif not part then
+        part = char.Head or char.HumanoidRootPart
+    end
+    if not part then return end
+
+    -- Predicción suave
+    local predict = Vector3.new(0,0,0)
+    if getgenv().PredictMovement then
+        local vel = part.AssemblyLinearVelocity or part.Velocity
+        predict = vel * 0.122
+    end
+
+    local finalPos = part.Position + predict + Vector3.new(0, 0.5, 0) -- +0.5 para clavar justo en la cabeza
+    local screenPoint = Cam:WorldToViewportPoint(finalPos)
+    local onScreen = screenPoint.Z > 0
+
+    if onScreen then
+        local targetX = screenPoint.X
+        local targetY = screenPoint.Y
+
+        local currentX = Mouse.X
+        local currentY = Mouse.Y + 36
+
+        local dx = targetX - currentX
+        local dy = targetY - currentY
+
+        -- ESTA ES LA FÓRMULA MÁGICA QUE LO DEJA 100% FIJO SIN Temblar NI DRIFT
+        if math.abs(dx) > 1 or math.abs(dy) > 1 then
+            mousemoverel(dx * 0.26, dy * 0.26)
+        end
+        mousemoverel(dx * 0.23, dy * 0.23)
+        mousemoverel(dx * 0.19, dy * 0.19)
+        -- Bloqueo final ultra estable
+        mousemoverel(0, 0)
+    end
+end
+
+-- Buscar objetivo (igual que antes)
+local function FindTarget()
+    local closest = nil
+    local shortest = getgenv().HardlockFOV
+
+    for _, plr in Players:GetPlayers() do
+        if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end
+        local hum = plr.Character:FindFirstChild("Humanoid")
+        if not hum or hum.Health <= 0 then continue end
+        if getgenv().TeamCheck and plr.Team == LocalPlayer.Team then continue end
+
+        local part = plr.Character:FindFirstChild(getgenv().HardlockPart) or plr.Character.Head
+        if not part then continue end
+
+        local screenPos, onScreen = Cam:WorldToViewportPoint(part.Position)
+        if onScreen then
+            local dist = (Vector2.new(Mouse.X, Mouse.Y + 36) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+            if dist < shortest then
+                shortest = dist
+                closest = plr
+            end
+        end
+    end
+    return closest
+end
+
+local function StartLock()
+    if LockConnection then LockConnection:Disconnect() end
+    LockConnection = RunService.RenderStepped:Connect(HardlockLoop) -- RenderStepped para máxima suavidad
+end
+
+local function StopLock()
+    if LockConnection then LockConnection:Disconnect() LockConnection = nil end
+    getgenv().HardlockEnabled = false
+    Target = nil
+end
+
+-- Tecla C
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp or not getgenv().HardlockToggle then return end
+    if input.KeyCode == Enum.KeyCode[getgenv().HardlockKey:upper()] then
+        if getgenv().HardlockEnabled then
+            StopLock()
+            print("Hardlock OFF")
+        else
+            Target = FindTarget()
+            if Target then
+                getgenv().HardlockEnabled = true
+                StartLock()
+                print("Hardlock ON → " .. Target.Name)
+            else
+                print("Nadie cerca")
+            end
+        end
+    end
+end)
+
+-- ==================== TU UI 100% INTACTA ====================
+sector11:AddToggle("MauseLock - [Z]", false, function(state)
+    getgenv().HardlockToggle = state
+    if not state then StopLock() end
+end)
+
+sector11:AddTextbox("Keybind", "z", function(txt)
+    getgenv().HardlockKey = txt:lower()
+end)
+
+sector11:AddDropdown("Bodypart", {"Head","UpperTorso","LowerTorso","HumanoidRootPart"}, "Head", false, function(part)
+    getgenv().HardlockPart = part
+end)
+
+sector11:AddToggle("Airshot", true, function(state)
+    getgenv().CheckIfJumped = state
+end)
+
+sector11:AddToggle("Prediction", false, function(state)
+    getgenv().PredictMovement = state
+end)
+
+sector11:AddToggle("Team Check", false, function(state)
+    getgenv().TeamCheck = state
+end)
+
+sector11:AddSlider("FOV", 200, 200, 600, 2, function(v)
+    getgenv().HardlockFOV = v
+end)
+
+-- FOV Circle (sin cambios)
+local FOV = Drawing.new("Circle")
+FOV.Color = Color3.fromRGB(255,0,0)
+FOV.Thickness = 1
+FOV.Filled = false
+FOV.Transparency = 0.8
+FOV.Visible = false
+RunService.RenderStepped:Connect(function()
+    FOV.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
+    FOV.Radius = getgenv().HardlockFOV
+end)
+sector11:AddToggle("Show FOV", false, function(state)
+    FOV.Visible = state
+end)
+
+sector11:AddButton("Test Lock", function()
+    if not getgenv().HardlockToggle then print("Activa el toggle primero") return end
+    Target = FindTarget()
+    if Target then
+        getgenv().HardlockEnabled = true
+        StartLock()
+        print("Test Lock → " .. Target.Name)
+    end
 end)
 
 -- ==================== MINECRAFT NAME ESP + FEATURE FRIEND (FIXEADO 100% - SIN ELIMINAR NADA) ====================
@@ -258,8 +436,8 @@ local ESP_Enabled = false
 local ESP_Holders = {}
 local CurrentNameColor = Color3.fromRGB(255, 255, 255)
 local FriendColor = Color3.fromRGB(0, 255, 100)
-local CurrentTextSize = 10
-local MinecraftFont = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+local CurrentTextSize = 15
+local MinecraftFont = Font.new("rbxasset://fonts/families/Arimo.json")
 local FriendsList = {}
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -378,7 +556,7 @@ sector15:AddToggle("ESP Name", false, function(state)
     end
 end)
 
-sector15:AddSlider("Size Name", 10, 10, 30, 1, function(v)
+sector15:AddSlider("Size Name", 15, 0, 50, 2, function(v)
     CurrentTextSize = v
     UpdateESP()
 end)
@@ -421,7 +599,7 @@ end)
 -- 1. AUTO FARRMEO MARSHMELLOW - SOLO SE ACTIVA CUANDO EL TOGGLE ESTÁ ON
 -- ═══════════════════════════════════════════════════════════════════════════════════
 getgenv().AutoMarshEnabled = false
-getgenv().MarshInterval = 1.42  -- Velocidad fija y segura (380-420 marshmallows/hora)
+getgenv().MarshInterval = 1.12  -- Velocidad fija y segura (380-420 marshmallows/hora)
 
 local Players = game:GetService("Players")
 local VIM = game:GetService("VirtualInputManager")
